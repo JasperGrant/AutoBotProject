@@ -14,7 +14,7 @@ from ev3dev2.button import Button
 
 # Set up robot as tank along with sensors
 robot = MoveTank(OUTPUT_A, OUTPUT_D)
-robot._gyro = GyroSensor(address = INPUT_4)
+gyro = GyroSensor(address = INPUT_4)
 cs = ColorSensor(address = INPUT_1)
 
 # Set up buttons
@@ -29,22 +29,51 @@ THRESHOLD = 30
 MOTOR_HIGH = 10
 MOTOR_LOW = 8
 
+# Number of readings for the robot to think it is off of the line
+OFFLINE_LIMIT = 100
+
+# Define PI
+PI = 3.141
+
 def follow_line():
-    # TODO: Decide on condition to end line following
-    while(condition):
+    offline_readings = 0
+    while(offline_readings < OFFLINE_LIMIT):
+        print(offline_readings)
         if cs.reflected_light_intensity < THRESHOLD:
-            # Go but a little left
+            offline_readings = 0
+            # Go but a little right
             robot.on(left_speed=MOTOR_HIGH, right_speed=MOTOR_LOW)
         else:
-            # Go but a little right
+            offline_readings += 1
+            # Go but a little left
             robot.on(left_speed=MOTOR_LOW, right_speed=MOTOR_HIGH)
     
     
 
 def find_line():
-    # TODO: Implement find_line()
     pass
 
-while not button.any():
-    follow_line()
-    find_line()
+def turn(degrees):
+    #difference = degrees - gyro.angle
+    #difference_radians = (difference * PI/180 + PI) % (2 * PI) - PI
+    #while(gyro.angle <)
+    initial_angle = gyro.angle
+    if degrees < 0:
+        while gyro.angle - initial_angle < degrees:
+            robot.on(left_speed=MOTOR_LOW, right_speed=MOTOR_HIGH)
+    else:
+        while gyro.angle - initial_angle < degrees:
+            robot.on(left_speed=MOTOR_HIGH, right_speed=MOTOR_LOW)
+
+def run_straight(distance):
+    pass
+
+#while not button.any():
+    #follow_line()
+    #robot.off()
+    #exit()
+    #find_line()
+print(robot._gyro.angle_and_rate)
+robot.turn_degrees(speed=5, target_angle=1)
+while(1):
+    print(robot._gyro.angle_and_rate)
