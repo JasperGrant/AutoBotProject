@@ -42,15 +42,17 @@ OFFLINE_LIMIT = 100
 # Define PI
 PI = 3.141
 
+NUM_DEGREES_FOR_EQUALITY = 3*PI/180
+DISTANCE_FOR_EQUALITY = 10
+
 #Velocity controller Gains
-K_RHO = 1
-K_ALPHA = 2
-K_BETA = -1
-K_P = 2
+K_RHO = 0.3
+K_ALPHA = 0.5
+K_BETA = -0.1
 
 #EV3 Parameters
-BASE_WIDTH = 0.145 #mm
-TIRE_DIAMETER = 0.058 #mm
+BASE_WIDTH = 14.5 #cm
+TIRE_DIAMETER = 5.8 #cm
 
 #Robot Pose (x, y, theta)
 pose_past = [0, 0, 0]  # Initial pose
@@ -72,13 +74,12 @@ def follow_line():
     
 
 def find_line():
-    theta_current = 0
     i = 0
     while True:
-        x_goal = [0, 10]
-        y_goal = [0, 0]
-        theta_goal = [90, 0]
-        # turn(left_motor, right_motor, x_goal[i], y_goal[i], theta_goal[i], theta_current)        
+        x_goal = [0, 0]
+        y_goal = [0, 100]
+        theta_goal = [PI/2, PI/2]
+        turn(left_motor, right_motor, theta_goal[i])        
         move_forward(left_motor, right_motor, x_goal[1], y_goal[1], theta_goal[1])
         break
 
@@ -92,6 +93,9 @@ def get_wheel_velocity(left_motor, right_motor):
     
     curr_left_encoder = left_motor.position
     curr_right_encoder = right_motor.position
+
+    # print("Left encoder:", curr_left_encoder)
+    # print("Right encoder:", curr_right_encoder)
     
     left_encoder_diff = curr_left_encoder - prev_left_encoder
     right_encoder_diff = curr_right_encoder - prev_right_encoder
@@ -114,14 +118,25 @@ def get_wheel_velocity(left_motor, right_motor):
     return left_velocity, right_velocity, delta_t  # Return both velocities and delta_t
 
 
-def turn(left_motor, right_motor, theta_goal, theta_current):
-    while  theta_current - theta_goal > (3*PI/180):
-        pass
+def turn(left_motor, right_motor, theta_goal):
+    global pose_past
+    print(pose_past[2])
+    print(theta_goal)
+    while(abs(velocity_controller(left_motor, right_motor, pose_past[0], pose_past[1], theta_goal)[2] - theta_goal) > (NUM_DEGREES_FOR_EQUALITY)):
+        print(pose_past[2])
+        print(theta_goal)
+
+    # Positive angle -> True -> Clockwise
+    # Negative angle -> False -> Counter-clockwise
+    #direction = theta_goal > 0
+   # while  theta_current - theta_goal > (3*PI/180):
+    #    omega = (r_velo_current - l_velo_current)/BASE_WIDTH
+#
+    #    theta_current = pose_past[2] + omega*delta_t
         
     
      
 
-    #difference = degrees - gyro.angle
     #difference_radians = (difference * PI/180 + PI) % (2 * PI) - PI
     #while(gyro.angle <)
     # initial_angle = gyro.angle
@@ -136,11 +151,20 @@ def move_forward(left_motor, right_motor, x_goal, y_goal, theta_goal):
     global pose_past
     x_current = 0
     y_current = 0
-    theta_current = 0
 
-    while m.sqrt((x_goal-x_current)**2+(y_goal-y_current)**2) > 0.015: # and cs.reflected_light_intensity < THRESHOLD_SEARCH:
-        x_current, y_current, theta_current = velocity_controller(left_motor, right_motor, x_goal, y_goal, theta_goal)
-    return theta_current
+
+    while m.sqrt((x_goal-x_current)**2+(y_goal-y_current)**2) > DISTANCE_FOR_EQUALITY: # and cs.reflected_light_intensity < THRESHOLD_SEARCH:
+        x_current, y_current, _ = velocity_controller(left_motor, right_motor, x_goal, y_goal, theta_goal)
+        # print("x_current:", x_current)
+        # print("y_current:", y_current)
+
+def circle_minus(angle):
+    return (angle + PI) % (2 * PI) - PI
+
+def clamp(value, min_value, max_value):
+    if value < 0:
+        return max(min(value, -min_value), -max_value)
+    return max(min(value, max_value), min_value)
 
 def velocity_controller(left_motor, right_motor, x_goal, y_goal, theta_goal):
     global pose_past    
@@ -148,7 +172,6 @@ def velocity_controller(left_motor, right_motor, x_goal, y_goal, theta_goal):
     l_velo_current, r_velo_current, delta_t  = get_wheel_velocity(left_motor, right_motor)
 
     #Calc linear and angular velocity
-    velo = (l_velo_current + r_velo_current)/2
     x_dot = m.cos(pose_past[2])*((l_velo_current + r_velo_current)/2)
     y_dot = m.sin(pose_past[2])*((l_velo_current + r_velo_current)/2)
     omega = (r_velo_current - l_velo_current)/BASE_WIDTH
@@ -158,16 +181,22 @@ def velocity_controller(left_motor, right_motor, x_goal, y_goal, theta_goal):
     y_current = pose_past[1] + y_dot*delta_t
 
     rho = m.sqrt((x_goal-x_current)**2+(y_goal-y_current)**2)
-    alpha = m.atan2((y_goal-y_current),(x_goal-x_current))-theta_current
+    alpha = (m.atan2((y_goal - y_current),(x_goal-x_current))-theta_current) if x_goal == 0 and y_goal == 0 else theta_goal-theta_current
     beta = theta_goal-theta_current-alpha
 
     #Calculate new velocity for input into motor driver for next time step
     velo = K_RHO*rho
-    omega = K_ALPHA*alpha + K_BETA*beta
+    omega = K_ALPHA*circle_minus(alpha) + K_BETA*circle_minus(beta)
 
-    left_velocity = velo + omega*BASE_WIDTH
-    right_velocity = velo - omega*BASE_WIDTH
-    # print("Linear velocity:", velo)
+    left_velocity = velo - omega*BASE_WIDTH
+    right_velocity = velo + omega*BASE_WIDTH
+    speed_l=clamp(left_velocity,20, 70)
+    speed_r=clamp(right_velocity,20, 70)
+    print("Left wheel velocity:", speed_l)
+    print("Right wheel velocity:", speed_r)
+
+
+    # print("Linear velocity:", velo_)
     # print("x_dot:", x_dot)
     # print("y_dot:", y_dot)
     # print("Angular velocity:", omega)
@@ -182,18 +211,18 @@ def velocity_controller(left_motor, right_motor, x_goal, y_goal, theta_goal):
     # print("Left wheel velocity:", left_velocity)
     # print("Right wheel velocity:", right_velocity)
 
-    left_motor.on(speed=left_velocity)
-    right_motor.on(speed=right_velocity)
+    left_motor.on(speed=clamp(left_velocity,20, 70))
+    right_motor.on(speed=clamp(right_velocity, 20, 70))
 
     #Store previous pose for next loop
     pose_past = [x_current, y_current, theta_current]
     return pose_past
 
-while not button.any():
+#while not button.any():
     #follow_line()
-    robot.off()
-    find_line()
-    robot.off()
+robot.off()
+find_line()
+robot.off()
     # exit()
 # print(robot._gyro.angle_and_rate)
 # robot.turn_degrees(speed=5, target_angle=1)
