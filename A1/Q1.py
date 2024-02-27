@@ -87,15 +87,11 @@ def get_wheel_velocity(left_motor, right_motor):
     
     prev_left_encoder = left_motor.position
     prev_right_encoder = right_motor.position
-    print("Left encoder past:", prev_left_encoder)
-    # print("x_dot:", x_dot)
-    # print("y_dot:", y_dot)
     
     sleep(0.1)  # Sleep for a short time to allow the motors to move
     
     curr_left_encoder = left_motor.position
     curr_right_encoder = right_motor.position
-    print("Left encoder current:", curr_left_encoder)
     
     left_encoder_diff = curr_left_encoder - prev_left_encoder
     right_encoder_diff = curr_right_encoder - prev_right_encoder
