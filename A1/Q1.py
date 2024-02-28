@@ -39,6 +39,9 @@ MOTOR_LOW = 8
 # Number of readings for the robot to think it is off of the line
 OFFLINE_LIMIT = 100
 
+# Number of readings for the robot to think it is going in the wrong direction
+WRONG_DIRECTION_LIMIT = 100
+
 # Define PI
 PI = 3.141
 
@@ -152,9 +155,16 @@ def move_forward(left_motor, right_motor, x_goal, y_goal, theta_goal):
     x_current = 0
     y_current = 0
 
+    wrong_direction_count = 0
 
     while m.sqrt((x_goal-x_current)**2+(y_goal-y_current)**2) > DISTANCE_FOR_EQUALITY: # and cs.reflected_light_intensity < THRESHOLD_SEARCH:
+        pre_dist = m.sqrt((x_goal-x_current)**2+(y_goal-y_current)**2) > DISTANCE_FOR_EQUALITY
         x_current, y_current, _ = velocity_controller(left_motor, right_motor, x_goal, y_goal, theta_goal)
+        post_dist = m.sqrt((x_goal-x_current)**2+(y_goal-y_current)**2) > DISTANCE_FOR_EQUALITY
+        if pre_dist < post_dist:
+            wrong_direction_count += 1
+        if wrong_direction_count > WRONG_DIRECTION_LIMIT:
+            return
         # print("x_current:", x_current)
         # print("y_current:", y_current)
 
