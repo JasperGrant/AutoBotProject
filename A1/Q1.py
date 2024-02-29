@@ -66,7 +66,7 @@ K_BETA = -0.1
 BASE_WIDTH = 11  # cm
 TIRE_DIAMETER = 5.8  # cm
 
-LAWNMOWER_DEPTH = 50
+LAWNMOWER_DEPTH = 20
 LAWNMOWER_WIDTH = 50
 
 # Robot Pose (x, y, theta)
@@ -116,20 +116,21 @@ def find_line():
             break
         i += 1
 
-        # Refollow line
-        # Move forwards a little
-        robot.on_for_seconds(10, 10, 0.3)
-        # Turn in direction of line
-        direction = circle_minus(pose_past[2] > 0)
-        if direction:
-            while cs.reflected_light_intensity > THRESHOLD_EDGE:
-                robot.on(left_speed=MOTOR_LOW, right_speed=-MOTOR_LOW)
-            pass
-        else:
-            while cs.reflected_light_intensity > THRESHOLD_EDGE:
-                robot.on(left_speed=-MOTOR_LOW, right_speed=MOTOR_LOW)
-        # Make sure that next follow is based on direction
-        return direction
+    # Refollow line
+    # Move forwards a little
+    robot.on_for_seconds(10, 10, 1.5)
+    # Turn in direction of line
+    direction = circle_minus(pose_past[2] > 0)
+    print(circle_minus(pose_past[2]))
+    if direction:
+        while cs.reflected_light_intensity > THRESHOLD_EDGE:
+            robot.on(left_speed=-MOTOR_LOW, right_speed=MOTOR_LOW)
+        pass
+    else:
+        while cs.reflected_light_intensity > THRESHOLD_EDGE:
+            robot.on(left_speed=MOTOR_LOW, right_speed=-MOTOR_LOW)
+    # Make sure that next follow is based on direction
+    return direction
 
 
 def get_wheel_velocity(left_motor, right_motor):  #
@@ -176,6 +177,7 @@ def get_wheel_velocity(left_motor, right_motor):  #
 
 def turn(left_motor, right_motor, theta_goal):
     global pose_past
+    count = 0
     # print(pose_past[2])
     # print(theta_goal)
     while abs(
@@ -191,8 +193,10 @@ def turn(left_motor, right_motor, theta_goal):
     ) > (NUM_DEGREES_FOR_EQUALITY):
         # print(pose_past[2])
         # print(theta_goal)
+
         if cs.reflected_light_intensity < THRESHOLD_SEARCH:
             return True
+
     return False
 
 
@@ -200,6 +204,7 @@ def move_forward(left_motor, right_motor, x_goal, y_goal, theta_goal):
     global pose_past
     x_current = 0
     y_current = 0
+    count = 0
 
     wrong_direction_count = 0
 
@@ -212,6 +217,7 @@ def move_forward(left_motor, right_motor, x_goal, y_goal, theta_goal):
             left_motor, right_motor, x_goal, y_goal, theta_goal, is_turning=False
         )
         post_dist = m.sqrt((x_goal - x_current) ** 2 + (y_goal - y_current) ** 2)
+
         if cs.reflected_light_intensity < THRESHOLD_SEARCH:
             return True
 
@@ -265,10 +271,10 @@ def velocity_controller(
 
     if is_turning:
         velo = 0
-        omega = clamp(omega, 15 / BASE_WIDTH, 25 / BASE_WIDTH)
+        omega = clamp(omega, 7 / BASE_WIDTH, 15 / BASE_WIDTH)
     else:
-        velo = clamp(velo, 20, 25)
-        omega = clamp(omega, 0, 30 / BASE_WIDTH)
+        velo = clamp(velo, 12, 15)
+        omega = clamp(omega, 0, 15 / BASE_WIDTH)
 
     # if alpha > abs(PI/2):
     #     velo = 0
