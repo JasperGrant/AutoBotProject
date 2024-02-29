@@ -73,26 +73,29 @@ LAWNMOWER_WIDTH = 50
 pose_past = [0, 0, 0]  # Initial pose
 
 
-def follow_line():
+def follow_line(following_left=True):
+    pose_past[2] = 0
     offline_readings = 0
     while offline_readings < OFFLINE_LIMIT:
-        print(offline_readings)
-        if cs.reflected_light_intensity < THRESHOLD_EDGE:
-            offline_readings = 0
-            # Go but a little right
-            robot.on(left_speed=MOTOR_HIGH, right_speed=MOTOR_LOW)
-        else:
-            offline_readings += 1
-            # Go but a little left
-            robot.on(left_speed=MOTOR_LOW, right_speed=MOTOR_HIGH)
+        towards_tape = cs.reflected_light_intensity < THRESHOLD_EDGE
+        motor_speeds = (
+            (MOTOR_HIGH, MOTOR_LOW)
+            if following_left == towards_tape
+            else (MOTOR_LOW, MOTOR_HIGH)
+        )
+        offline_readings = 0 if towards_tape else offline_readings + 1
+        robot.on(left_speed=motor_speeds[0], right_speed=motor_speeds[1])
 
 
 def find_line():
     # Reset the pose
     global pose_past
-    pose_past = [0, 0, 0]
+    pose_past[0] = 0
+    pose_past[1] = 0
     x_goal = 0
     i = 0
+
+    # Lawnmower pattern
     while True:
         i %= 4
         print("segment", i)
@@ -112,6 +115,21 @@ def find_line():
             print("Found line on move")
             break
         i += 1
+
+        # Refollow line
+        # Move forwards a little
+        robot.on_for_seconds(10, 10, 0.3)
+        # Turn in direction of line
+        direction = circle_minus(pose_past[2] > 0)
+        if direction:
+            while cs.reflected_light_intensity > THRESHOLD_EDGE:
+                robot.on(left_speed=MOTOR_LOW, right_speed=-MOTOR_LOW)
+            pass
+        else:
+            while cs.reflected_light_intensity > THRESHOLD_EDGE:
+                robot.on(left_speed=-MOTOR_LOW, right_speed=MOTOR_LOW)
+        # Make sure that next follow is based on direction
+        return direction
 
 
 def get_wheel_velocity(left_motor, right_motor):  #
@@ -288,13 +306,7 @@ def velocity_controller(
     return pose_past
 
 
-# while not button.any():
-# follow_line()
-robot.off()
-find_line()
-robot.off()
-# exit()
-# print(robot._gyro.angle_and_rate)
-# robot.turn_degrees(speed=5, target_angle=1)
-# while(1):
-#     print(robot._gyro.angle_and_rate)
+direction = True
+while not button.any():
+    follow_line(following_left=direction)
+    direction = find_line()
