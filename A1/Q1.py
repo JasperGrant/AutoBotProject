@@ -54,7 +54,11 @@ K_ALPHA = 0.5
 K_BETA = -0.1
 
 #EV3 Parameters
+<<<<<<< HEAD
 BASE_WIDTH = 13.5 #cm
+=======
+BASE_WIDTH = 14.5 #cm
+>>>>>>> 383ff3587a18052ecfe860fe7b744454c359eccf
 TIRE_DIAMETER = 5.8 #cm
 
 #Robot Pose (x, y, theta)
@@ -195,6 +199,7 @@ def velocity_controller(left_motor, right_motor, x_goal, y_goal, theta_goal):
     beta = theta_goal-theta_current-alpha
 
     #Calculate new velocity for input into motor driver for next time step
+<<<<<<< HEAD
     velo = K_RHO*rho, 10, 69
 
     if alpha > abs(PI/2):
@@ -211,6 +216,15 @@ def velocity_controller(left_motor, right_motor, x_goal, y_goal, theta_goal):
     else:
         speed_l=clamp(left_velocity,20, 70)
         speed_r=clamp(right_velocity,20, 70)
+=======
+    velo = K_RHO*rho
+    omega = K_ALPHA*circle_minus(alpha) + K_BETA*circle_minus(beta)
+
+    left_velocity = velo - omega*BASE_WIDTH
+    right_velocity = velo + omega*BASE_WIDTH
+    speed_l=clamp(left_velocity,20, 70)
+    speed_r=clamp(right_velocity,20, 70)
+>>>>>>> 383ff3587a18052ecfe860fe7b744454c359eccf
     print("Left wheel velocity:", speed_l)
     print("Right wheel velocity:", speed_r)
 
@@ -230,8 +244,11 @@ def velocity_controller(left_motor, right_motor, x_goal, y_goal, theta_goal):
     # print("Left wheel velocity:", left_velocity)
     # print("Right wheel velocity:", right_velocity)
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 383ff3587a18052ecfe860fe7b744454c359eccf
     left_motor.on(speed=clamp(left_velocity,20, 70))
     right_motor.on(speed=clamp(right_velocity, 20, 70))
 
