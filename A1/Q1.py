@@ -25,7 +25,7 @@ from ev3dev2.sensor.lego import ColorSensor, GyroSensor
 from ev3dev2.button import Button
 
 # Set up robot as tank along with sensors
-robot = MoveTank(OUTPUT_A, OUTPUT_D)
+robot = MoveTank(OUTPUT_D, OUTPUT_A)
 # mdiff = MoveDifferential(OUTPUT_A, OUTPUT_D, EV3Tire, 100.0) #Need to change measurments
 left_motor = LargeMotor(OUTPUT_D)
 right_motor = LargeMotor(OUTPUT_A)
@@ -79,9 +79,9 @@ def follow_line(following_left=True):
     while offline_readings < OFFLINE_LIMIT:
         towards_tape = cs.reflected_light_intensity < THRESHOLD_EDGE
         motor_speeds = (
-            (MOTOR_HIGH, MOTOR_LOW)
+            (MOTOR_LOW, MOTOR_HIGH)
             if following_left == towards_tape
-            else (MOTOR_LOW, MOTOR_HIGH)
+            else (MOTOR_HIGH, MOTOR_LOW)
         )
         offline_readings = 0 if towards_tape else offline_readings + 1
         robot.on(left_speed=motor_speeds[0], right_speed=motor_speeds[1])
@@ -124,11 +124,11 @@ def find_line():
     print(circle_minus(pose_past[2]))
     if direction:
         while cs.reflected_light_intensity > THRESHOLD_EDGE:
-            robot.on(left_speed=-MOTOR_LOW, right_speed=MOTOR_LOW)
+            robot.on(left_speed=MOTOR_LOW, right_speed=-MOTOR_LOW)
         pass
     else:
         while cs.reflected_light_intensity > THRESHOLD_EDGE:
-            robot.on(left_speed=MOTOR_LOW, right_speed=-MOTOR_LOW)
+            robot.on(left_speed=-MOTOR_LOW, right_speed=MOTOR_LOW)
     # Make sure that next follow is based on direction
     return direction
 
