@@ -59,15 +59,15 @@ DISTANCE_FOR_EQUALITY = 10
 
 # Velocity controller Gains
 K_RHO = 0.3
-K_ALPHA = 0.5
+K_ALPHA = 0.4
 K_BETA = -0.1
 
 # EV3 Parameters
-BASE_WIDTH = 12.5  # cm
+BASE_WIDTH = 11  # cm
 TIRE_DIAMETER = 5.8  # cm
 
-LAWNMOWER_DEPTH = 30
-LAWNMOWER_WIDTH = 100
+LAWNMOWER_DEPTH = 50
+LAWNMOWER_WIDTH = 50
 
 # Robot Pose (x, y, theta)
 pose_past = [0, 0, 0]  # Initial pose
@@ -247,9 +247,9 @@ def velocity_controller(
 
     if is_turning:
         velo = 0
-        omega = clamp(omega, 20 / BASE_WIDTH, 30 / BASE_WIDTH)
+        omega = clamp(omega, 15 / BASE_WIDTH, 25 / BASE_WIDTH)
     else:
-        velo = clamp(velo, 20, 30)
+        velo = clamp(velo, 20, 25)
         omega = clamp(omega, 0, 30 / BASE_WIDTH)
 
     # if alpha > abs(PI/2):
