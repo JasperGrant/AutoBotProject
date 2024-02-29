@@ -40,7 +40,7 @@ MOTOR_LOW = 8
 OFFLINE_LIMIT = 100
 
 # Number of readings for the robot to think it is going in the wrong direction
-WRONG_DIRECTION_LIMIT = 100
+WRONG_DIRECTION_LIMIT = 10
 
 # Define PI
 PI = 3.141
@@ -54,11 +54,7 @@ K_ALPHA = 0.5
 K_BETA = -0.1
 
 #EV3 Parameters
-<<<<<<< HEAD
-BASE_WIDTH = 13.5 #cm
-=======
-BASE_WIDTH = 14.5 #cm
->>>>>>> 383ff3587a18052ecfe860fe7b744454c359eccf
+BASE_WIDTH = 12.5 #cm
 TIRE_DIAMETER = 5.8 #cm
 
 #Robot Pose (x, y, theta)
@@ -82,13 +78,14 @@ def follow_line():
 
 def find_line():
     i = 0
-    while True:
-        x_goal = [0, 0]
-        y_goal = [0, 100]
-        theta_goal = [PI/2, PI/2]
+    while i < 4:
+        x_goal = [0, 10, 10, 20] #[0, 10, 10, 20]
+        y_goal = [100, 100, -100, -100] #[100, 100, 200, 200]
+        theta_goal = [PI/2, 0, -PI/2, 0] #[PI/2, 0, -PI/2, 0]
         turn(left_motor, right_motor, theta_goal[i])        
-        move_forward(left_motor, right_motor, x_goal[1], y_goal[1], theta_goal[1])
-        break
+        move_forward(left_motor, right_motor, x_goal[i], y_goal[i], theta_goal[i])
+        print("Goal one hit")
+        i  += 1
 
 def get_wheel_velocity(left_motor, right_motor):
     start_time = time()  # Record the starting time
@@ -129,7 +126,7 @@ def turn(left_motor, right_motor, theta_goal):
     global pose_past
     print(pose_past[2])
     print(theta_goal)
-    while(abs(velocity_controller(left_motor, right_motor, pose_past[0], pose_past[1], theta_goal)[2] - theta_goal) > (NUM_DEGREES_FOR_EQUALITY)):
+    while(abs(velocity_controller(left_motor, right_motor, pose_past[0], pose_past[1], theta_goal, is_turning=True)[2] - theta_goal) > (NUM_DEGREES_FOR_EQUALITY)):
         print(pose_past[2])
         print(theta_goal)
 
@@ -163,11 +160,12 @@ def move_forward(left_motor, right_motor, x_goal, y_goal, theta_goal):
 
     while m.sqrt((x_goal-x_current)**2+(y_goal-y_current)**2) > DISTANCE_FOR_EQUALITY: # and cs.reflected_light_intensity < THRESHOLD_SEARCH:
         pre_dist = m.sqrt((x_goal-x_current)**2+(y_goal-y_current)**2) > DISTANCE_FOR_EQUALITY
-        x_current, y_current, _ = velocity_controller(left_motor, right_motor, x_goal, y_goal, theta_goal)
+        x_current, y_current, _ = velocity_controller(left_motor, right_motor, x_goal, y_goal, theta_goal, is_turning = False)
         post_dist = m.sqrt((x_goal-x_current)**2+(y_goal-y_current)**2) > DISTANCE_FOR_EQUALITY
         if pre_dist < post_dist:
             wrong_direction_count += 1
         if wrong_direction_count > WRONG_DIRECTION_LIMIT:
+            print("Goal given up on")
             return
         # print("x_current:", x_current)
         # print("y_current:", y_current)
@@ -180,7 +178,7 @@ def clamp(value, min_value, max_value):
         return max(min(value, -min_value), -max_value)
     return max(min(value, max_value), min_value)
 
-def velocity_controller(left_motor, right_motor, x_goal, y_goal, theta_goal):
+def velocity_controller(left_motor, right_motor, x_goal, y_goal, theta_goal, is_turning = False):
     global pose_past    
     #Pull velocity and time step values from encoders (Needs work)
     l_velo_current, r_velo_current, delta_t  = get_wheel_velocity(left_motor, right_motor)
@@ -199,34 +197,30 @@ def velocity_controller(left_motor, right_motor, x_goal, y_goal, theta_goal):
     beta = theta_goal-theta_current-alpha
 
     #Calculate new velocity for input into motor driver for next time step
-<<<<<<< HEAD
-    velo = K_RHO*rho, 10, 69
-
-    if alpha > abs(PI/2):
-        velo = 0
-    
-    omega = K_ALPHA*circle_minus(alpha) + K_BETA*circle_minus(beta), 5, 30
-
-    left_velocity = velo - omega*BASE_WIDTH
-    right_velocity = velo + omega*BASE_WIDTH
-    scale = left_velocity/right_velocity
-    if left_velocity and right_velocity < 20:
-        speed_l=clamp(left_velocity,20, 70)
-        speed_r=clamp(right_velocity,20, 70)/scale
-    else:
-        speed_l=clamp(left_velocity,20, 70)
-        speed_r=clamp(right_velocity,20, 70)
-=======
     velo = K_RHO*rho
     omega = K_ALPHA*circle_minus(alpha) + K_BETA*circle_minus(beta)
 
+
+    if is_turning:
+        velo = 0
+        omega = clamp(omega, 20/BASE_WIDTH, 30/BASE_WIDTH)
+    else:
+        velo = clamp(velo, 20, 30)
+        omega = clamp(omega, 0, 30/BASE_WIDTH)
+
+    # if alpha > abs(PI/2):
+    #     velo = 0
+
     left_velocity = velo - omega*BASE_WIDTH
     right_velocity = velo + omega*BASE_WIDTH
-    speed_l=clamp(left_velocity,20, 70)
-    speed_r=clamp(right_velocity,20, 70)
->>>>>>> 383ff3587a18052ecfe860fe7b744454c359eccf
-    print("Left wheel velocity:", speed_l)
-    print("Right wheel velocity:", speed_r)
+    # scale = abs(left_velocity/right_velocity)
+    # if left_velocity < 20 and right_velocity < 20:
+    #     speed_l=clamp(left_velocity,20, 70)
+    #     speed_r=clamp(right_velocity,20, 70)/scale
+
+
+    print("Left wheel velocity:", left_velocity)
+    print("Right wheel velocity:", right_velocity)
 
 
     # print("Linear velocity:", velo_)
@@ -244,13 +238,8 @@ def velocity_controller(left_motor, right_motor, x_goal, y_goal, theta_goal):
     # print("Left wheel velocity:", left_velocity)
     # print("Right wheel velocity:", right_velocity)
 
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 383ff3587a18052ecfe860fe7b744454c359eccf
-    left_motor.on(speed=clamp(left_velocity,20, 70))
-    right_motor.on(speed=clamp(right_velocity, 20, 70))
+    left_motor.on(speed=left_velocity)
+    right_motor.on(speed=right_velocity)
 
     #Store previous pose for next loop
     pose_past = [x_current, y_current, theta_current]
