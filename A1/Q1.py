@@ -19,7 +19,7 @@ from ev3dev2.motor import (
 from ev3dev2.sensor import INPUT_1, INPUT_4
 
 # Sensor types
-from ev3dev2.sensor.lego import ColorSensor, GyroSensor
+from ev3dev2.sensor.lego import ColorSensor
 
 # Button
 from ev3dev2.button import Button
@@ -29,7 +29,6 @@ robot = MoveTank(OUTPUT_D, OUTPUT_A)
 # mdiff = MoveDifferential(OUTPUT_A, OUTPUT_D, EV3Tire, 100.0) #Need to change measurments
 left_motor = LargeMotor(OUTPUT_D)
 right_motor = LargeMotor(OUTPUT_A)
-gyro = GyroSensor(address=INPUT_4)
 cs = ColorSensor(address=INPUT_1)
 
 # Set up buttons
@@ -312,7 +311,8 @@ def velocity_controller(
     return pose_past
 
 
-direction = True
-while not button.any():
-    follow_line(following_left=direction)
-    direction = find_line()
+if __name__ == "__main__":
+    direction = True
+    while not button.any():
+        follow_line(following_left=direction)
+        direction = find_line()
