@@ -12,7 +12,7 @@ WRONG_DIRECTION_LIMIT = 10
 
 
 NUM_DEGREES_FOR_EQUALITY = 3 * PI / 180
-DISTANCE_FOR_EQUALITY = 10
+DISTANCE_FOR_EQUALITY = 2
 
 # Velocity controller Gains
 K_RHO = 0.3
@@ -28,7 +28,7 @@ def get_wheel_velocity(left_motor, right_motor):
     start_time = time()
     prev_left_encoder = left_motor.position
     prev_right_encoder = right_motor.position
-    sleep(0.1)
+    sleep(0.5)
     curr_left_encoder = left_motor.position
     curr_right_encoder = right_motor.position
 
@@ -45,6 +45,10 @@ def get_wheel_velocity(left_motor, right_motor):
 
     left_velocity = left_distance / delta_t
     right_velocity = right_distance / delta_t
+
+    print("Left wheel velocity:", left_velocity)
+    print("Right wheel velocity:", right_velocity)
+    print("Delta t:", delta_t)
 
     return left_velocity, right_velocity, delta_t
 
@@ -84,7 +88,7 @@ def velocity_controller(
         velo = 0
         omega = ev3_math.clamp(omega, 7 / BASE_WIDTH, 15 / BASE_WIDTH)
     else:
-        velo = ev3_math.clamp(velo, 12, 15)
+        velo = ev3_math.clamp(velo, 5, 10)
         omega = ev3_math.clamp(omega, 0, 15 / BASE_WIDTH)
 
     # if alpha > abs(PI/2):
@@ -120,4 +124,5 @@ def velocity_controller(
 
     # Store previous pose for next loop
     pose_past = [x_current, y_current, theta_current]
+    print("Pose:", pose_past)
     return pose_past

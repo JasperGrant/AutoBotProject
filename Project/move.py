@@ -6,8 +6,9 @@
 
 import math as m
 from time import sleep, time
-
+from ev3dev2.button import Button
 from motion_controller import velocity_controller
+from sensor import sensor_scan, reset_servo
 
 # Motor inputs
 from ev3dev2.motor import (
@@ -23,8 +24,6 @@ from ev3dev2.motor import (
 # # Sensor types
 # from ev3dev2.sensor.lego import ColorSensor
 
-# Button
-from ev3dev2.button import Button
 
 # Set up robot as tank along with sensors
 robot = MoveTank(OUTPUT_D, OUTPUT_A)
@@ -40,28 +39,45 @@ PI = 3.14159
 
 # thresholds for setpoint tracker
 NUM_DEGREES_FOR_EQUALITY = 3 * PI / 180
-DISTANCE_FOR_EQUALITY = 10
+DISTANCE_FOR_EQUALITY = 2
 WRONG_DIRECTION_LIMIT = 10
 
 # Inital test conditons for waypoints. Will be updated to be dynamic
-DEPTH_GOAL = 100
+DEPTH_GOAL = 20
 WIDTH_GOAL = 100
 
 
 def move_robot():
     # Move in a square pattern
     i = 0
-    while i < 1:
+    x_goal = 0
+
+    # reset servo motor to zero
+    reset_servo()
+
+    map_file = open("map.txt", "w")
+    map_file.write("")
+    map_file.close()
+
+    while i < 5:
         print("segment", i)
-        x_goal = [DEPTH_GOAL, DEPTH_GOAL, 0]
+        x_goal += DEPTH_GOAL
 
-        y_goal = [0, WIDTH_GOAL, WIDTH_GOAL]
-        theta_goal = [0, PI / 2, PI]
+        y_goal = [0, 0, 0, 0, 0, 0]
+        theta_goal = [0, 0, 0, 0, 0, 0]
 
-        turn(left_motor, right_motor, theta_goal[i])
-        move_forward(left_motor, right_motor, x_goal[i], y_goal[i], theta_goal[i])
+        # turn(left_motor, right_motor, theta_goal[i])
+        move_forward(left_motor, right_motor, x_goal, y_goal[i], theta_goal[i])
+
+        left_motor.stop()
+        right_motor.stop()
+
+        sleep(3)
+        sensor_scan(360, 5, (pose_past[0], pose_past[1]))
 
         i += 1
+    left_motor.stop()
+    right_motor.stop()
 
 
 def turn(left_motor, right_motor, theta_goal):
@@ -98,8 +114,6 @@ def move_forward(left_motor, right_motor, x_goal, y_goal, theta_goal):
             is_turning=False,
         )
         post_dist = m.sqrt((x_goal - pose_past[0]) ** 2 + (y_goal - pose_past[1]) ** 2)
-
-        print("pose", pose_past)
 
         if pre_dist < post_dist:
             wrong_direction_count += 1

@@ -22,6 +22,10 @@ servo = MediumMotor(OUTPUT_C)
 ultrasonic_sensor = UltrasonicSensor(address=INPUT_3)
 
 
+def reset_servo():
+    servo.reset()
+
+
 def move_servo_to_angle(angle, speed=10, callback=lambda: sleep(0.1)):
     servo.on_to_position(speed, angle)
     while servo.is_running:
@@ -49,7 +53,7 @@ def sensor_scan(width, resolution, robot_pose):
         point = transform_distance_to_coordinate(distance, angle, robot_pose)
         map_file.write(str(point[0]) + " , " + str(point[1]) + "\n")
         map_file.close()
-        sleep(0.5)
+        sleep(0.2)
 
 
 # Test the sensor scan function
