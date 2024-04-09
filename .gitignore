@@ -1,2 +1,4 @@
 .vscode
 .idea
+Project/__pycache__
+map.txt
