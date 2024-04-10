@@ -3,100 +3,80 @@
 # 2024-04-06
 
 import matplotlib.pyplot as plt
-import random
+
+SIX_FEET = 182.88
 
 
-def get_random_points(data, n):
-    # Return n random consecutive points from data
-    start = random.randint(0, len(data) - n)
-    return data[start : start + n]
+def get_vertical_line(points):
+    x = [round(point[0]) for point in points]
+    line_location = max(set(x), key=x.count)
+    return [(line_location + 0.5, 0), (line_location + 0.5, SIX_FEET)]
 
 
-def get_best_fit_line(points):
-    x = [float(point[0]) for point in points]
-    y = [float(point[1]) for point in points]
-    x_mean = sum(x) / len(x)
-    y_mean = sum(y) / len(y)
-    x_diff = [x[i] - x_mean for i in range(len(x))]
-    y_diff = [y[i] - y_mean for i in range(len(y))]
-    slope = sum([x_diff[i] * y_diff[i] for i in range(len(x))]) / sum(
-        [x_diff[i] ** 2 for i in range(len(x))]
-    )
-    y_intercept = y_mean - slope * x_mean
-    return slope, y_intercept
-
-
-def get_distance_from_line(point, line_slope, line_intercept):
-    return abs(line_slope * point[0] - point[1] + line_intercept) / (
-        (line_slope**2 + 1) ** 0.5
-    )
-
-
-def RANSAC(num_inliers, max_iterations, data, fit_threshold, num_close_points_required):
-    walls = []
-    for _ in range(max_iterations):
-        inliers = get_random_points(data, num_inliers)
-        line_slope, line_intercept = get_best_fit_line(inliers)
-        inliers = [
-            point
-            for point in data
-            if get_distance_from_line(point, line_slope, line_intercept) < fit_threshold
-        ]
-        if len(inliers) > num_close_points_required:
-            line_slope, line_intercept = get_best_fit_line(inliers)
-            # Cut off the wall at the ends of the inliers
-            x_min = min([point[0] for point in inliers])
-            x_max = max([point[0] for point in inliers])
-            y_min = line_slope * x_min + line_intercept
-            y_max = line_slope * x_max + line_intercept
-            walls.append([(x_min, y_min), (x_max, y_max)])
-    # Return list of walls represented as two points each
-    return walls
+def get_horizontal_line(points):
+    y = [round(point[1]) for point in points]
+    line_location = max(set(y), key=y.count)
+    return [(0, line_location + 0.5), (SIX_FEET, line_location + 0.5)]
 
 
 def wall_identification(data):
     walls = []
-    for group in [
-        data[64:72] + data[0:6],
-        data[10:24],
-        data[28:42],
-        data[46:60],
-    ]:
-        group = [(float(point[0]), float(point[1])) for point in group]
-        line_slope, line_intercept = get_best_fit_line(group)
-        x_min = min([point[0] for point in group])
-        x_max = max([point[0] for point in group])
-        y_min = line_slope * x_min + line_intercept
-        y_max = line_slope * x_max + line_intercept
-        walls.append([(x_min, y_min), (x_max, y_max)])
+    even = True
+    for group in split_into_cardinal_cones(data):
+        print(group)
+        group = [(float(point[0]), float(point[1])) for point in group[0]]
+        if even:
+            walls.append(get_vertical_line(group))
+        else:
+            walls.append(get_horizontal_line(group))
+        even = not even
 
     return walls
 
 
+def split_into_cardinal_cones(points):
+
+    length = len(points)
+    print(length)
+    num_scans = length // 72
+    if num_scans == 0:
+        num_scans = 1
+    up = []
+    down = []
+    left = []
+    right = []
+    for i in range(num_scans):
+        direction = 72 // 4
+        data = points[i * 72 : (i + 1) * 72]
+        right.append(data[0:6] + data[-6:])
+        up.append(data[direction - 6 : direction + 6])
+        left.append(data[(2 * direction) - 6 : (2 * direction) + 6])
+        down.append(data[(3 * direction) - 6 : (3 * direction) + 6])
+
+    return [right, up, left, down]
+
+
 map_file = open("map.txt", "r").read()
+points = [point.split(",") for point in map_file.split("\n") if point]
 
+# Change points into four groups by value of first char
 points = [
-    [line.split(",")[0], line.split(",")[1]] for line in map_file.split("\n") if line
+    [[[point[1], point[2]]] for point in points if point[0] == direction]
+    for direction in "RULD"
 ]
-
-corner_points = points[6:10] + points[24:28] + points[42:46] + points[60:64]
 
 predicted_walls = wall_identification(points)
-# RANSAC(
-#    5, 200, [(float(point[0]), float(point[1])) for point in points], 2, 8
-# )
-# Actual walls in the environment
+
 actual_walls = [
-    [(0, 0), (0, 182.88)],
-    [(0, 182.88), (182.88, 182.88)],
-    [(182.88, 0), (0, 0)],
-    [(182.88, 182.88), (182.88, 0)],
+    [(0, 0), (0, SIX_FEET)],
+    [(0, SIX_FEET), (SIX_FEET, SIX_FEET)],
+    [(SIX_FEET, 0), (0, 0)],
+    [(SIX_FEET, SIX_FEET), (SIX_FEET, 0)],
 ]
+
 plt.figure()
 for point in points:
     plt.scatter(float(point[0]), float(point[1]), color="red")
-for point in corner_points:
-    plt.scatter(float(point[0]), float(point[1]), color="orange")
 print(predicted_walls)
 for wall in predicted_walls:
     plt.plot([point[0] for point in wall], [point[1] for point in wall], color="blue")

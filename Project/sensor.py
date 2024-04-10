@@ -60,6 +60,26 @@ def sensor_scan(width, resolution, robot_pose):
     return points
 
 
+def cardinal_direction_sensor_scan(width, resolution, robot_pose):
+    points = [[], [], [], []]
+    cardinal_directions = ["R", "U", "L", "D"]
+    for i, direction in enumerate(cardinal_directions):
+        start = (i * 90) - width // 2
+        end = (i * 90) + width // 2
+        for angle in range(start, end, resolution):
+            move_servo_to_angle(angle)
+            distance = get_ultrasonic_distance()
+            if distance == 255:
+                continue
+            map_file = open("map.txt", "a")
+            point = transform_distance_to_coordinate(distance, -angle, robot_pose)
+            points[i].append(point)
+            map_file.write(direction + "," + str(point[0]) + "," + str(point[1]) + "\n")
+            map_file.close()
+            sleep(0.2)
+    return points
+
+
 # Test the sensor scan function
 if __name__ == "__main__":
     servo.reset()
@@ -68,5 +88,5 @@ if __name__ == "__main__":
     map_file.write("")
     map_file.close()
     print("Starting scan")
-    sensor_scan(360, 5, (60.96, 122.88, 0))
+    cardinal_direction_sensor_scan(60, 5, (122.88, 122.88, 0))
     print("Scan complete")
