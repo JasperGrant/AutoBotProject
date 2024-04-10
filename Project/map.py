@@ -57,9 +57,12 @@ def split_into_cardinal_cones(points):
 
 
 map_file = open("map.txt", "r").read()
+points = [point.split(",") for point in map_file.split("\n") if point]
 
+# Change points into four groups by value of first char
 points = [
-    [line.split(",")[0], line.split(",")[1]] for line in map_file.split("\n") if line
+    [[[point[1], point[2]]] for point in points if point[0] == direction]
+    for direction in "RULD"
 ]
 
 predicted_walls = wall_identification(points)
