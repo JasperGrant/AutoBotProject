@@ -54,8 +54,21 @@ def RANSAC(num_inliers, max_iterations, data, fit_threshold, num_close_points_re
     return walls
 
 
+def get_vertical_line(points):
+    x = [round(point[0]) for point in points]
+    line_location = max(set(x), key=x.count)
+    return [(line_location, 0), (line_location, 182.88)]
+
+
+def get_horizontal_line(points):
+    y = [round(point[1]) for point in points]
+    line_location = max(set(y), key=y.count)
+    return [(0, line_location), (182.88, line_location)]
+
+
 def wall_identification(data):
     walls = []
+    even = True
     for group in [
         data[64:72] + data[0:6],
         data[10:24],
@@ -63,12 +76,11 @@ def wall_identification(data):
         data[46:60],
     ]:
         group = [(float(point[0]), float(point[1])) for point in group]
-        line_slope, line_intercept = get_best_fit_line(group)
-        x_min = min([point[0] for point in group])
-        x_max = max([point[0] for point in group])
-        y_min = line_slope * x_min + line_intercept
-        y_max = line_slope * x_max + line_intercept
-        walls.append([(x_min, y_min), (x_max, y_max)])
+        if even:
+            walls.append(get_vertical_line(group))
+        else:
+            walls.append(get_horizontal_line(group))
+        even = not even
 
     return walls
 
@@ -82,10 +94,6 @@ points = [
 corner_points = points[6:10] + points[24:28] + points[42:46] + points[60:64]
 
 predicted_walls = wall_identification(points)
-# RANSAC(
-#    5, 200, [(float(point[0]), float(point[1])) for point in points], 2, 8
-# )
-# Actual walls in the environment
 actual_walls = [
     [(0, 0), (0, 182.88)],
     [(0, 182.88), (182.88, 182.88)],
