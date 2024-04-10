@@ -8,7 +8,7 @@ import math as m
 from time import sleep, time
 from ev3dev2.button import Button
 from motion_controller import velocity_controller
-from sensor import sensor_scan, reset_servo
+from sensor import cardinal_direction_sensor_scan, reset_servo
 
 # Motor inputs
 from ev3dev2.motor import (
@@ -35,10 +35,10 @@ button = Button()
 
 PI = 3.14159
 
-pose_past = [30, 0, PI / 2]
+pose_past = [50, 0, PI / 2]
 # thresholds for setpoint tracker
 NUM_DEGREES_FOR_EQUALITY = 3 * PI / 180
-DISTANCE_FOR_EQUALITY = 2
+DISTANCE_FOR_EQUALITY = 5
 WRONG_DIRECTION_LIMIT = 10
 
 # Inital test conditons for waypoints. Will be updated to be dynamic
@@ -61,7 +61,14 @@ def move_robot():
         print("segment", i)
         y_goal = [30, 60, 90, 120, 120, 120, 120, 90, 60, 30, 0]
 
-        x_goal = [30, 30, 30, 30, 60, 90, 120, 120, 120, 120, 120]
+        x_goal = [50, 50, 50, 50, 80, 110, 140, 140, 140, 140, 140]
+        # y_goal = [30, 60, 60, 30, 0]
+
+        # x_goal = [30, 30, 90, 90, 90]
+        # x_goal = 30
+        # y_goal = 0
+
+        # theta_goal = [0, -PI / 2, -PI, PI / 2, 0]
 
         theta_goal = [
             PI / 2,
@@ -76,7 +83,9 @@ def move_robot():
             -PI / 2,
             -PI / 2,
         ]
-        if pose_past[2] - theta_goal[i] > 5 * PI / 180:
+
+        # theta_goal = [PI / 2, PI / 2, 0, -PI / 2, -PI / 2]
+        if pose_past[2] - theta_goal[i] > 10 * PI / 180:
             turn(left_motor, right_motor, theta_goal[i])
             print("turning")
         move_forward(left_motor, right_motor, x_goal[i], y_goal[i], theta_goal[i])
@@ -85,7 +94,7 @@ def move_robot():
         right_motor.stop()
 
         sleep(1)
-        sensor_scan(360, 5, pose_past)
+        cardinal_direction_sensor_scan(60, 5, pose_past)
 
         i += 1
     left_motor.stop()

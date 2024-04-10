@@ -15,20 +15,20 @@ NUM_DEGREES_FOR_EQUALITY = 3 * PI / 180
 DISTANCE_FOR_EQUALITY = 2
 
 # Velocity controller Gains
-K_RHO = 0.3
-K_ALPHA = 0.7
-K_BETA = -0.1
+K_RHO = 0.5
+K_ALPHA = 0.8
+K_BETA = -0.5
 
 # EV3 Parameters
-BASE_WIDTH = 11  # cm
+BASE_WIDTH = 13  # cm
 TIRE_DIAMETER = 5.8  # cm
 
 
-def get_wheel_velocity(left_motor, right_motor):
+def get_wheel_velocity(left_motor, right_motor, TIME):
     start_time = time()
     prev_left_encoder = left_motor.position
     prev_right_encoder = right_motor.position
-    sleep(0.5)
+    sleep(TIME)
     curr_left_encoder = left_motor.position
     curr_right_encoder = right_motor.position
 
@@ -57,8 +57,11 @@ def velocity_controller(
     left_motor, right_motor, x_goal, y_goal, theta_goal, pose_past, is_turning=False
 ):
     # Pull velocity and time step values from encoders (Needs work)
+
+    TIME = 0.5
+
     l_velo_current, r_velo_current, delta_t = get_wheel_velocity(
-        left_motor, right_motor
+        left_motor, right_motor, TIME
     )
 
     # Calc linear and angular velocity
@@ -73,7 +76,7 @@ def velocity_controller(
     rho = m.sqrt((x_goal - x_current) ** 2 + (y_goal - y_current) ** 2)
     alpha = (
         (m.atan2((y_goal - y_current), (x_goal - x_current)) - theta_current)
-        if x_goal == 0 and y_goal == 0
+        if not is_turning
         else theta_goal - theta_current
     )
     beta = theta_goal - theta_current - alpha
@@ -86,9 +89,9 @@ def velocity_controller(
 
     if is_turning:
         velo = 0
-        omega = ev3_math.clamp(omega, 7 / BASE_WIDTH, 15 / BASE_WIDTH)
+        omega = ev3_math.clamp(omega, 3 / BASE_WIDTH, 8 / BASE_WIDTH)
     else:
-        velo = ev3_math.clamp(velo, 5, 10)
+        velo = ev3_math.clamp(velo, 6, 12)
         omega = ev3_math.clamp(omega, 0, 15 / BASE_WIDTH)
 
     # if alpha > abs(PI/2):
@@ -123,6 +126,6 @@ def velocity_controller(
     right_motor.on(speed=right_velocity)
 
     # Store previous pose for next loop
-    pose_past = [x_current, y_current, theta_current]
+    pose_past = [x_current, y_current, ev3_math.circle_minus(theta_current)]
     print("Pose:", pose_past)
     return pose_past
