@@ -4,68 +4,77 @@
 
 import matplotlib.pyplot as plt
 
+# Six feet in cm
 SIX_FEET = 182.88
+# Limit for how far a line candidate can be from the expected position of the line
+NEAREST_NEIGHBOUR_LIMIT = 10
+
+# These will both be combined into one function at some point in the future
 
 
-def get_vertical_line(points):
+# Function to get vertical line based on mode of points
+def get_vertical_line(points, line):
+    # Convert x values of points to integers
     x = [round(point[0]) for point in points]
-    line_location = max(set(x), key=x.count)
+    # Get the mode of the x values
+    line_locations = sorted(set(x), key=x.count)
+    line_location = line_locations[-1]
+    # Set limit based on line position
+    if line == "L":
+        limit = 0
+    else:
+        limit = SIX_FEET
+    # If selected point is too far from nearest neighbour, remove it
+    while abs(line_location - limit) > NEAREST_NEIGHBOUR_LIMIT:
+        line_locations.pop()
+        line_location = line_locations[-1]
+    # Return final line candidate as two points
     return [(line_location + 0.5, 0), (line_location + 0.5, SIX_FEET)]
 
 
-def get_horizontal_line(points):
+# Function to get vertical line based on mode of points
+def get_horizontal_line(points, line):
+    # Convert y values of points to integers
     y = [round(point[1]) for point in points]
-    line_location = max(set(y), key=y.count)
+    # Get the mode of the y values
+    line_locations = sorted(set(y), key=y.count)
+    line_location = line_locations[-1]
+    # Set limit based on line position
+    if line == "U":
+        limit = SIX_FEET
+    else:
+        limit = 0
+    # If selected point is too far from nearest neighbour, remove it
+    while abs(line_location - limit) > NEAREST_NEIGHBOUR_LIMIT:
+        line_locations.pop()
+        line_location = line_locations[-1]
+    # Return final line candidate as two points
     return [(0, line_location + 0.5), (SIX_FEET, line_location + 0.5)]
 
 
+# Function to identify walls based on four groups of points
 def wall_identification(data):
     walls = []
-    even = True
-    for group in split_into_cardinal_cones(data):
-        print(group)
-        group = [(float(point[0]), float(point[1])) for point in group[0]]
-        if even:
-            walls.append(get_vertical_line(group))
-        else:
-            walls.append(get_horizontal_line(group))
-        even = not even
+    # Split data into four groups
+    data = [[(float(point[0]), float(point[1])) for point in group] for group in data]
+    # Get vertical and horizontal lines for each group
+    walls.append(get_vertical_line(data[0], "R"))
+    walls.append(get_horizontal_line(data[1], "U"))
+    walls.append(get_vertical_line(data[2], "L"))
+    walls.append(get_horizontal_line(data[3], "D"))
 
     return walls
 
 
-def split_into_cardinal_cones(points):
-
-    length = len(points)
-    print(length)
-    num_scans = length // 72
-    if num_scans == 0:
-        num_scans = 1
-    up = []
-    down = []
-    left = []
-    right = []
-    for i in range(num_scans):
-        direction = 72 // 4
-        data = points[i * 72 : (i + 1) * 72]
-        right.append(data[0:6] + data[-6:])
-        up.append(data[direction - 6 : direction + 6])
-        left.append(data[(2 * direction) - 6 : (2 * direction) + 6])
-        down.append(data[(3 * direction) - 6 : (3 * direction) + 6])
-
-    return [right, up, left, down]
-
-
-map_file = open("map.txt", "r").read()
+map_file = open("map_5.txt", "r").read()
 points = [point.split(",") for point in map_file.split("\n") if point]
-
 # Change points into four groups by value of first char
-points = [
-    [[[point[1], point[2]]] for point in points if point[0] == direction]
+group_of_points = [
+    [[point[1], point[2]] for point in points if point[0] == direction]
     for direction in "RULD"
 ]
 
-predicted_walls = wall_identification(points)
+predicted_walls = wall_identification(group_of_points)
 
 actual_walls = [
     [(0, 0), (0, SIX_FEET)],
@@ -74,13 +83,13 @@ actual_walls = [
     [(SIX_FEET, SIX_FEET), (SIX_FEET, 0)],
 ]
 
+# Plot the map
 plt.figure()
-for point in points:
-    plt.scatter(float(point[0]), float(point[1]), color="red")
-print(predicted_walls)
+for points in group_of_points:
+    for point in points:
+        plt.scatter(float(point[0]), float(point[1]), color="red")
 for wall in predicted_walls:
     plt.plot([point[0] for point in wall], [point[1] for point in wall], color="blue")
-    print(wall)
 
 for wall in actual_walls:
     plt.plot([point[0] for point in wall], [point[1] for point in wall], color="green")

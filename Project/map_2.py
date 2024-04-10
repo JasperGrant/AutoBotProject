@@ -73,10 +73,10 @@ def wall_identification(data):
     return walls
 
 
-map_file = open("map_3.txt", "r").read()
+map_file = open("map_5.txt", "r").read()
 
 points = [
-    [line.split(",")[0], line.split(",")[1]] for line in map_file.split("\n") if line
+    [line.split(",")[1], line.split(",")[2]] for line in map_file.split("\n") if line
 ]
 
 corner_points = points[6:10] + points[24:28] + points[42:46] + points[60:64]
