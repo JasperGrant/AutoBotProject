@@ -39,8 +39,8 @@ def get_ultrasonic_distance():
 
 def transform_distance_to_coordinate(distance, angle, robot_pose):
     return [
-        robot_pose[0] + (distance * (cos(radians(angle) + robot_pose[2]))),
-        robot_pose[1] + (distance * (sin(radians(angle) + robot_pose[2]))),
+        robot_pose[0] + (distance * (cos(radians(angle)))),
+        robot_pose[1] + (distance * (sin(radians(angle)))),
     ]
 
 
@@ -61,18 +61,24 @@ def sensor_scan(width, resolution, robot_pose):
 
 
 def cardinal_direction_sensor_scan(width, resolution, robot_pose):
+    # Init empty lists
     points = [[], [], [], []]
+    # Cardinal directions Right, Up, Left, Down
     cardinal_directions = ["R", "U", "L", "D"]
+    # Loop through integers 0-3 and each cardinal direction
     for i, direction in enumerate(cardinal_directions):
+        # Define start and end angles for each cardinal direction
         start = (i * 90) - width // 2
         end = (i * 90) + width // 2
         for angle in range(start, end, resolution):
-            move_servo_to_angle(angle)
+            move_servo_to_angle(angle + robot_pose[2])
             distance = get_ultrasonic_distance()
             if distance == 255:
                 continue
             map_file = open("map.txt", "a")
-            point = transform_distance_to_coordinate(distance, -angle, robot_pose)
+            point = transform_distance_to_coordinate(
+                distance, -angle + robot_pose[2], robot_pose
+            )
             points[i].append(point)
             map_file.write(direction + "," + str(point[0]) + "," + str(point[1]) + "\n")
             map_file.close()
