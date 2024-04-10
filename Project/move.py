@@ -33,10 +33,9 @@ right_motor = LargeMotor(OUTPUT_A)
 # Set up buttons
 button = Button()
 
-pose_past = [0, 0, 0]
-
 PI = 3.14159
 
+pose_past = [30, 0, PI / 2]
 # thresholds for setpoint tracker
 NUM_DEGREES_FOR_EQUALITY = 3 * PI / 180
 DISTANCE_FOR_EQUALITY = 2
@@ -50,7 +49,6 @@ WIDTH_GOAL = 100
 def move_robot():
     # Move in a square pattern
     i = 0
-    x_goal = 0
 
     # reset servo motor to zero
     reset_servo()
@@ -59,21 +57,35 @@ def move_robot():
     map_file.write("")
     map_file.close()
 
-    while i < 5:
+    while i < 12:
         print("segment", i)
-        x_goal += DEPTH_GOAL
+        y_goal = [30, 60, 90, 120, 120, 120, 120, 90, 60, 30, 0]
 
-        y_goal = [0, 0, 0, 0, 0, 0]
-        theta_goal = [0, 0, 0, 0, 0, 0]
+        x_goal = [30, 30, 30, 30, 60, 90, 120, 120, 120, 120, 120]
 
-        # turn(left_motor, right_motor, theta_goal[i])
-        move_forward(left_motor, right_motor, x_goal, y_goal[i], theta_goal[i])
+        theta_goal = [
+            PI / 2,
+            PI / 2,
+            PI / 2,
+            PI / 2,
+            0,
+            0,
+            0,
+            -PI / 2,
+            -PI / 2,
+            -PI / 2,
+            -PI / 2,
+        ]
+        if pose_past[2] - theta_goal[i] > 5 * PI / 180:
+            turn(left_motor, right_motor, theta_goal[i])
+            print("turning")
+        move_forward(left_motor, right_motor, x_goal[i], y_goal[i], theta_goal[i])
 
         left_motor.stop()
         right_motor.stop()
 
-        sleep(3)
-        sensor_scan(360, 5, (pose_past[0], pose_past[1]))
+        sleep(1)
+        sensor_scan(360, 5, pose_past)
 
         i += 1
     left_motor.stop()
