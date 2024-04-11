@@ -27,6 +27,8 @@ def get_vertical_line(points, line):
     # If selected point is too far from nearest neighbour, remove it
     while abs(line_location - limit) > NEAREST_NEIGHBOUR_LIMIT:
         line_locations.pop()
+        if line_locations == []:
+            raise ValueError(f"No valid line candiates for {line} line.")
         line_location = line_locations[-1]
     # Return final line candidate as two points
     return [(line_location + 0.5, 0), (line_location + 0.5, SIX_FEET)]
@@ -40,16 +42,18 @@ def get_horizontal_line(points, line):
     line_locations = sorted(set(y), key=y.count)
     line_location = line_locations[-1]
     # Set limit based on line position
-    # if line == "U":
-    #     limit = SIX_FEET
-    # else:
-    #     limit = 0
-    # # If selected point is too far from nearest neighbour, remove it
-    # while abs(line_location - limit) > NEAREST_NEIGHBOUR_LIMIT:
-    #     print(line_location)
-    #     line_locations.pop()
-    #     line_location = line_locations[-1]
-    # # Return final line candidate as two points
+    if line == "U":
+        limit = SIX_FEET
+    else:
+        limit = 0
+    # If selected point is too far from nearest neighbour, remove it
+    while abs(line_location - limit) > NEAREST_NEIGHBOUR_LIMIT:
+        print(line_location)
+        line_locations.pop()
+        if line_locations == []:
+            raise ValueError(f"No valid line candiates for {line} line.")
+        line_location = line_locations[-1]
+    # Return final line candidate as two points
     return [(0, line_location + 0.5), (SIX_FEET, line_location + 0.5)]
 
 
@@ -72,7 +76,7 @@ points = [point.split(",") for point in map_file.split("\n") if point]
 # Change points into four groups by value of first char
 group_of_points = [
     [[point[1], point[2]] for point in points if point[0] == direction]
-    for direction in "RULD"
+    for direction in "RULDC"
 ]
 
 predicted_walls = wall_identification(group_of_points)
@@ -94,6 +98,8 @@ for point in group_of_points[2]:
     plt.scatter(float(point[0]), float(point[1]), color="yellow")
 for point in group_of_points[3]:
     plt.scatter(float(point[0]), float(point[1]), color="pink")
+for point in group_of_points[4]:
+    plt.scatter(float(point[0]), float(point[1]), color="purple")
 
 for wall in predicted_walls:
     plt.plot([point[0] for point in wall], [point[1] for point in wall], color="blue")
