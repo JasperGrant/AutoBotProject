@@ -8,7 +8,13 @@ import math as m
 from time import sleep, time
 from ev3dev2.button import Button
 from motion_controller import velocity_controller
-from sensor import cardinal_direction_sensor_scan, reset_servo
+from sensor import (
+    cardinal_direction_sensor_scan,
+    reset_servo,
+    wall_identification,
+    point_map,
+    get_vertical_line,
+)
 
 # Motor inputs
 from ev3dev2.motor import (
@@ -59,7 +65,7 @@ def move_robot():
 
     while i < 12:
         print("segment", i)
-        y_goal = [30, 60, 90, 120, 120, 120, 120, 90, 60, 30, 0]
+        y_goal = [30, 60, 90, 140, 140, 140, 140, 90, 60, 30, 0]
 
         x_goal = [50, 50, 50, 50, 80, 110, 140, 140, 140, 140, 140]
         # y_goal = [30, 60, 60, 30, 0]
@@ -95,6 +101,8 @@ def move_robot():
 
         sleep(1)
         cardinal_direction_sensor_scan(60, 5, pose_past)
+        wall_identification(point_map)
+        range_sense = get_vertical_line(point_map[2], "L")[0][0]
 
         i += 1
     left_motor.stop()

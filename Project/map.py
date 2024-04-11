@@ -20,17 +20,17 @@ def get_vertical_line(points, line):
     line_locations = sorted(set(x), key=x.count)
     line_location = line_locations[-1]
     # Set limit based on line position
-    if line == "L":
-        limit = 0
-    else:
-        limit = SIX_FEET
-    # If selected point is too far from nearest neighbour, remove it
-    while abs(line_location - limit) > NEAREST_NEIGHBOUR_LIMIT:
-        line_locations.pop()
-        if line_locations == []:
-            raise ValueError(f"No valid line candiates for {line} line.")
-        line_location = line_locations[-1]
-    # Return final line candidate as two points
+    # if line == "L":
+    #     limit = 0
+    # else:
+    #     limit = SIX_FEET
+    # # If selected point is too far from nearest neighbour, remove it
+    # while abs(line_location - limit) > NEAREST_NEIGHBOUR_LIMIT:
+    #     line_locations.pop()
+    #     if line_locations == []:
+    #         return [(-50, -50), (-50, -50)]
+    #     line_location = line_locations[-1]
+    # # Return final line candidate as two points
     return [(line_location + 0.5, 0), (line_location + 0.5, SIX_FEET)]
 
 
@@ -42,18 +42,18 @@ def get_horizontal_line(points, line):
     line_locations = sorted(set(y), key=y.count)
     line_location = line_locations[-1]
     # Set limit based on line position
-    if line == "U":
-        limit = SIX_FEET
-    else:
-        limit = 0
-    # If selected point is too far from nearest neighbour, remove it
-    while abs(line_location - limit) > NEAREST_NEIGHBOUR_LIMIT:
-        print(line_location)
-        line_locations.pop()
-        if line_locations == []:
-            raise ValueError(f"No valid line candiates for {line} line.")
-        line_location = line_locations[-1]
-    # Return final line candidate as two points
+    # if line == "U":
+    #     limit = SIX_FEET
+    # else:
+    #     limit = 0
+    # # If selected point is too far from nearest neighbour, remove it
+    # while abs(line_location - limit) > NEAREST_NEIGHBOUR_LIMIT:
+    #     print(line_location)
+    #     line_locations.pop()
+    #     if line_locations == []:
+    #         return [(-50, -50), (-50, -50)]
+    #     line_location = line_locations[-1]
+    # # Return final line candidate as two points
     return [(0, line_location + 0.5), (SIX_FEET, line_location + 0.5)]
 
 
@@ -71,7 +71,7 @@ def wall_identification(data):
     return walls
 
 
-map_file = open("map_6.txt", "r").read()
+map_file = open("map.txt", "r").read()
 points = [point.split(",") for point in map_file.split("\n") if point]
 # Change points into four groups by value of first char
 group_of_points = [
