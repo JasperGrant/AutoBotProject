@@ -80,7 +80,7 @@ def cardinal_direction_sensor_scan(width, resolution, robot_pose):
         start = (i * 90) - width // 2
         end = (i * 90) + width // 2
         for angle in range(start, end, resolution):
-            move_servo_to_angle(-angle - (robot_pose[2] * 180 / pi) + 90)
+            move_servo_to_angle(-angle + (robot_pose[2] * 180 / pi) - 90)
             distance = get_ultrasonic_distance()
             if distance > 75:
                 continue
