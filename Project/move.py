@@ -40,7 +40,7 @@ right_motor = LargeMotor(OUTPUT_A)
 # Set up buttons
 button = Button()
 
-pose_past = [50, 0, pi / 2]
+pose_past = [40, 0, pi / 2]
 # thresholds for setpoint tracker
 NUM_DEGREES_FOR_EQUALITY = 3 * pi / 180
 DISTANCE_FOR_EQUALITY = 5
@@ -62,24 +62,73 @@ def move_robot():
     map_file.write("")
     map_file.close()
 
-    while i < 12:
+    while i < 16:
         print("segment", i)
-        y_goal = [30, 60, 90, 140, 140, 140, 140, 90, 60, 30, 0]
+        y_goal = [
+            30,
+            50,
+            70,
+            90,
+            110,
+            140,
+            140,
+            140,
+            140,
+            140,
+            140,
+            120,
+            100,
+            80,
+            60,
+            30,
+            0,
+        ]
 
-        x_goal = [50, 50, 50, 50, 80, 110, 140, 140, 140, 140, 140]
+        x_goal = [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            60,
+            80,
+            100,
+            120,
+            160,
+            160,
+            160,
+            160,
+            160,
+            160,
+            160,
+        ]
+        # y_goal = [30, 60, 60, 30, 0]
+
+        # x_goal = [30, 30, 90, 90, 90]
+        # x_goal = 30
+        # y_goal = 0
+
+        # theta_goal = [0, -PI / 2, -PI, PI / 2, 0]
 
         theta_goal = [
-            pi / 2,
-            pi / 2,
-            pi / 2,
-            pi / 2,
+            PI / 2,
+            PI / 2,
+            PI / 2,
+            PI / 2,
+            PI / 2,
+            PI / 2,
             0,
             0,
             0,
-            -pi / 2,
-            -pi / 2,
-            -pi / 2,
-            -pi / 2,
+            0,
+            0,
+            -PI / 2,
+            -PI / 2,
+            -PI / 2,
+            -PI / 2,
+            -PI / 2,
+            -PI / 2,
         ]
 
         # theta_goal = [pi / 2, pi / 2, 0, -pi / 2, -pi / 2]

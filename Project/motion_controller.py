@@ -15,7 +15,7 @@ NUM_DEGREES_FOR_EQUALITY = 3 * PI / 180
 DISTANCE_FOR_EQUALITY = 2
 
 # Velocity controller Gains
-K_RHO = 0.5
+K_RHO = 0.7
 K_ALPHA = 0.8
 K_BETA = -0.5
 
@@ -91,7 +91,7 @@ def velocity_controller(
         velo = 0
         omega = ev3_math.clamp(omega, 3 / BASE_WIDTH, 8 / BASE_WIDTH)
     else:
-        velo = ev3_math.clamp(velo, 6, 12)
+        velo = ev3_math.clamp(velo, 7, 12)
         omega = ev3_math.clamp(omega, 0, 15 / BASE_WIDTH)
 
     # if alpha > abs(PI/2):
