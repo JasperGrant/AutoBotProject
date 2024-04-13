@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 
-import math as m
+from math import pi, sin, cos, atan2, sqrt
 import EV3_math_modules as ev3_math
 from time import sleep, time
-
-PI = 3.14159
 
 # Assuming we are on a line to start
 # Number of readings for the robot to think it is going in the wrong direction
 WRONG_DIRECTION_LIMIT = 10
 
 
-NUM_DEGREES_FOR_EQUALITY = 3 * PI / 180
+NUM_DEGREES_FOR_EQUALITY = 3 * pi / 180
 DISTANCE_FOR_EQUALITY = 2
 
 # Velocity controller Gains
@@ -37,8 +35,8 @@ def get_wheel_velocity(left_motor, right_motor, TIME):
 
     wheel_radius = TIRE_DIAMETER / 2
 
-    left_distance = (left_encoder_diff / 360) * 2 * PI * wheel_radius
-    right_distance = (right_encoder_diff / 360) * 2 * PI * wheel_radius
+    left_distance = (left_encoder_diff / 360) * 2 * pi * wheel_radius
+    right_distance = (right_encoder_diff / 360) * 2 * pi * wheel_radius
 
     end_time = time()
     delta_t = end_time - start_time
@@ -65,17 +63,17 @@ def velocity_controller(
     )
 
     # Calc linear and angular velocity
-    x_dot = m.cos(pose_past[2]) * ((l_velo_current + r_velo_current) / 2)
-    y_dot = m.sin(pose_past[2]) * ((l_velo_current + r_velo_current) / 2)
+    x_dot = cos(pose_past[2]) * ((l_velo_current + r_velo_current) / 2)
+    y_dot = sin(pose_past[2]) * ((l_velo_current + r_velo_current) / 2)
     omega = (r_velo_current - l_velo_current) / BASE_WIDTH
 
     theta_current = pose_past[2] + omega * delta_t
     x_current = pose_past[0] + x_dot * delta_t
     y_current = pose_past[1] + y_dot * delta_t
 
-    rho = m.sqrt((x_goal - x_current) ** 2 + (y_goal - y_current) ** 2)
+    rho = sqrt((x_goal - x_current) ** 2 + (y_goal - y_current) ** 2)
     alpha = (
-        (m.atan2((y_goal - y_current), (x_goal - x_current)) - theta_current)
+        (atan2((y_goal - y_current), (x_goal - x_current)) - theta_current)
         if not is_turning
         else theta_goal - theta_current
     )
@@ -94,7 +92,7 @@ def velocity_controller(
         velo = ev3_math.clamp(velo, 7, 12)
         omega = ev3_math.clamp(omega, 0, 15 / BASE_WIDTH)
 
-    # if alpha > abs(PI/2):
+    # if alpha > abs(pi/2):
     #     velo = 0
 
     left_velocity = velo - omega * BASE_WIDTH

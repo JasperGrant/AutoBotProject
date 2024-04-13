@@ -109,26 +109,26 @@ def move_robot():
         # x_goal = 30
         # y_goal = 0
 
-        # theta_goal = [0, -PI / 2, -PI, PI / 2, 0]
+        # theta_goal = [0, -pi / 2, -pi, pi / 2, 0]
 
         theta_goal = [
-            PI / 2,
-            PI / 2,
-            PI / 2,
-            PI / 2,
-            PI / 2,
-            PI / 2,
+            pi / 2,
+            pi / 2,
+            pi / 2,
+            pi / 2,
+            pi / 2,
+            pi / 2,
             0,
             0,
             0,
             0,
             0,
-            -PI / 2,
-            -PI / 2,
-            -PI / 2,
-            -PI / 2,
-            -PI / 2,
-            -PI / 2,
+            -pi / 2,
+            -pi / 2,
+            -pi / 2,
+            -pi / 2,
+            -pi / 2,
+            -pi / 2,
         ]
 
         # theta_goal = [pi / 2, pi / 2, 0, -pi / 2, -pi / 2]
