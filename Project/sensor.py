@@ -53,19 +53,45 @@ def transform_distance_to_coordinate(distance, angle, robot_pose):
     ]
 
 
+# def sensor_scan(width, resolution, robot_pose):
+#     points = []
+#     for angle in range(0, -width, -resolution):
+#         move_servo_to_angle(angle)
+#         distance = get_ultrasonic_distance()
+#         if distance == 255:
+#             continue
+#         map_file = open("map.txt", "a")
+#         point = transform_distance_to_coordinate(distance, -angle, robot_pose)
+#         points.append(point)
+
+#         map_file.close()
+#         sleep(0.2)
+#     return points
+
+
 def sensor_scan(width, resolution, robot_pose):
     points = []
     for angle in range(0, -width, -resolution):
+        distances = []
         move_servo_to_angle(angle)
-        distance = get_ultrasonic_distance()
-        if distance == 255:
-            continue
-        map_file = open("map.txt", "a")
-        point = transform_distance_to_coordinate(distance, -angle, robot_pose)
-        points.append(point)
-        map_file.write(str(point[0]) + " , " + str(point[1]) + "\n")
-        map_file.close()
-        sleep(0.2)
+        for _ in range(3):  # Take three measurements
+            distance = get_ultrasonic_distance()
+            if distance != 255:
+                print(distance)
+                distances.append(distance)
+                points_file = open("points.txt", "a")
+                points_file.write(str(point[0]) + " , " + str(point[1]) + "\n")
+                points_file.close()
+        if distances:
+            averaged_distance = sum(distances) / len(distances)
+            map_file = open("map.txt", "a")
+            point = transform_distance_to_coordinate(
+                averaged_distance, -angle, robot_pose
+            )
+            points.append(point)
+            map_file.write(str(point[0]) + " , " + str(point[1]) + "\n")
+            map_file.close()
+        sleep(0.3)  # Wait before moving to the next angle
     return points
 
 
@@ -80,13 +106,23 @@ def cardinal_direction_sensor_scan(width, resolution, robot_pose):
         start = (i * 90) - width // 2
         end = (i * 90) + width // 2
         for angle in range(start, end, resolution):
+            distances = []
             move_servo_to_angle(-angle + (robot_pose[2] * 180 / pi) - 90)
             distance = get_ultrasonic_distance()
             if distance > 75:
                 continue
+            for _ in range(5):  # Take three measurements
+                distance = get_ultrasonic_distance()
+                print(distance)
+                print("okok")
+                distances.append(distance)
+                points_file = open("points.txt", "a")
+                points_file.write(str(distance))
+                points_file.close()
+            averaged_distance = sum(distances) / len(distances)
             map_file = open("map.txt", "a")
             point = transform_distance_to_coordinate(
-                distance - RANGE_SCAN_OFFSET, angle, robot_pose
+                averaged_distance - RANGE_SCAN_OFFSET, angle, robot_pose
             )
             point_map[i].append(point)
             map_file.write(direction + "," + str(point[0]) + "," + str(point[1]) + "\n")
@@ -182,6 +218,11 @@ if __name__ == "__main__":
     map_file = open("map.txt", "w")
     map_file.write("")
     map_file.close()
+
+    points_file = open("points.txt", "w")
+    points_file.write("")
+    points_file.close()
+
     print("Starting scan")
     cardinal_direction_sensor_scan(60, 5, (122.88, 122.88, 0))
     print("Scan complete")
