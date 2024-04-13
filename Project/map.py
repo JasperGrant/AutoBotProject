@@ -7,15 +7,17 @@ import matplotlib.pyplot as plt
 # Six feet in cm
 SIX_FEET = 182.88
 # Limit for how far a line candidate can be from the expected position of the line
-NEAREST_NEIGHBOUR_LIMIT = 10
+NEAREST_NEIGHBOUR_LIMIT = 30
+# Resolution for wall estimation
+WALL_ESTIMATION_RESOLUTION = 5
 
 # These will both be combined into one function at some point in the future
 
 
 # Function to get vertical line based on mode of points
-def get_vertical_line(points, line):
+def get_vertical_line(points, line, resolution=1):
     # Convert x values of points to integers
-    x = [round(point[0]) for point in points]
+    x = [round(point[0] / resolution) * resolution for point in points]
     # Get the mode of the x values
     line_locations = sorted(set(x), key=x.count)
     line_location = line_locations[-1]
@@ -31,13 +33,16 @@ def get_vertical_line(points, line):
             return [(-50, -50), (-50, -50)]
         line_location = line_locations[-1]
     # Return final line candidate as two points
-    return [(line_location + 0.5, 0), (line_location + 0.5, SIX_FEET)]
+    return [
+        (line_location + resolution / 2, 0),
+        (line_location + resolution / 2, SIX_FEET),
+    ]
 
 
 # Function to get vertical line based on mode of points
-def get_horizontal_line(points, line):
+def get_horizontal_line(points, line, resolution=1):
     # Convert y values of points to integers
-    y = [round(point[1]) for point in points]
+    y = [round(point[1] / resolution) * resolution for point in points]
     # Get the mode of the y values
     line_locations = sorted(set(y), key=y.count)
     line_location = line_locations[-1]
@@ -54,7 +59,10 @@ def get_horizontal_line(points, line):
             return [(-50, -50), (-50, -50)]
         line_location = line_locations[-1]
     # Return final line candidate as two points
-    return [(0, line_location + 0.5), (SIX_FEET, line_location + 0.5)]
+    return [
+        (0, line_location + resolution / 2),
+        (SIX_FEET, line_location + resolution / 2),
+    ]
 
 
 # Function to identify walls based on four groups of points
@@ -63,15 +71,15 @@ def wall_identification(data):
     # Split data into four groups
     data = [[(float(point[0]), float(point[1])) for point in group] for group in data]
     # Get vertical and horizontal lines for each group
-    walls.append(get_vertical_line(data[0], "R"))
-    walls.append(get_horizontal_line(data[1], "U"))
-    walls.append(get_vertical_line(data[2], "L"))
-    walls.append(get_horizontal_line(data[3], "D"))
+    walls.append(get_vertical_line(data[0], "R", WALL_ESTIMATION_RESOLUTION))
+    walls.append(get_horizontal_line(data[1], "U", WALL_ESTIMATION_RESOLUTION))
+    walls.append(get_vertical_line(data[2], "L", WALL_ESTIMATION_RESOLUTION))
+    # walls.append(get_horizontal_line(data[3], "D", WALL_ESTIMATION_RESOLUTION))
 
     return walls
 
 
-map_file = open("map.txt", "r").read()
+map_file = open("map_3.txt", "r").read()
 points = [point.split(",") for point in map_file.split("\n") if point]
 # Change points into four groups by value of first char
 group_of_points = [

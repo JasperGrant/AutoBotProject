@@ -4,7 +4,7 @@
 # Jasper Grant and Michael MacGillivray
 # 2024-04-05
 
-import math as m
+from math import pi, sqrt
 from time import sleep, time
 from ev3dev2.button import Button
 from motion_controller import velocity_controller
@@ -15,6 +15,7 @@ from sensor import (
     point_map,
     get_vertical_line,
 )
+from avoid import is_object_detected
 
 # Motor inputs
 from ev3dev2.motor import (
@@ -39,11 +40,9 @@ right_motor = LargeMotor(OUTPUT_A)
 # Set up buttons
 button = Button()
 
-PI = 3.14159
-
-pose_past = [50, 0, PI / 2]
+pose_past = [50, 0, pi / 2]
 # thresholds for setpoint tracker
-NUM_DEGREES_FOR_EQUALITY = 3 * PI / 180
+NUM_DEGREES_FOR_EQUALITY = 3 * pi / 180
 DISTANCE_FOR_EQUALITY = 5
 WRONG_DIRECTION_LIMIT = 10
 
@@ -68,30 +67,23 @@ def move_robot():
         y_goal = [30, 60, 90, 140, 140, 140, 140, 90, 60, 30, 0]
 
         x_goal = [50, 50, 50, 50, 80, 110, 140, 140, 140, 140, 140]
-        # y_goal = [30, 60, 60, 30, 0]
-
-        # x_goal = [30, 30, 90, 90, 90]
-        # x_goal = 30
-        # y_goal = 0
-
-        # theta_goal = [0, -PI / 2, -PI, PI / 2, 0]
 
         theta_goal = [
-            PI / 2,
-            PI / 2,
-            PI / 2,
-            PI / 2,
+            pi / 2,
+            pi / 2,
+            pi / 2,
+            pi / 2,
             0,
             0,
             0,
-            -PI / 2,
-            -PI / 2,
-            -PI / 2,
-            -PI / 2,
+            -pi / 2,
+            -pi / 2,
+            -pi / 2,
+            -pi / 2,
         ]
 
-        # theta_goal = [PI / 2, PI / 2, 0, -PI / 2, -PI / 2]
-        if pose_past[2] - theta_goal[i] > 10 * PI / 180:
+        # theta_goal = [pi / 2, pi / 2, 0, -pi / 2, -pi / 2]
+        if pose_past[2] - theta_goal[i] > 10 * pi / 180:
             turn(left_motor, right_motor, theta_goal[i])
             print("turning")
         move_forward(left_motor, right_motor, x_goal[i], y_goal[i], theta_goal[i])
@@ -121,6 +113,9 @@ def turn(left_motor, right_motor, theta_goal):
             pose_past,
             is_turning=True,
         )
+        if is_object_detected():
+            print("Object detected")
+            return -2
 
 
 def move_forward(left_motor, right_motor, x_goal, y_goal, theta_goal):
@@ -129,10 +124,10 @@ def move_forward(left_motor, right_motor, x_goal, y_goal, theta_goal):
     wrong_direction_count = 0
 
     while (
-        m.sqrt((x_goal - pose_past[0]) ** 2 + (y_goal - pose_past[1]) ** 2)
+        sqrt((x_goal - pose_past[0]) ** 2 + (y_goal - pose_past[1]) ** 2)
         > DISTANCE_FOR_EQUALITY
     ):
-        pre_dist = m.sqrt((x_goal - pose_past[0]) ** 2 + (y_goal - pose_past[1]) ** 2)
+        pre_dist = sqrt((x_goal - pose_past[0]) ** 2 + (y_goal - pose_past[1]) ** 2)
         pose_past = velocity_controller(
             left_motor,
             right_motor,
@@ -142,13 +137,18 @@ def move_forward(left_motor, right_motor, x_goal, y_goal, theta_goal):
             pose_past,
             is_turning=False,
         )
-        post_dist = m.sqrt((x_goal - pose_past[0]) ** 2 + (y_goal - pose_past[1]) ** 2)
+        post_dist = sqrt((x_goal - pose_past[0]) ** 2 + (y_goal - pose_past[1]) ** 2)
 
         if pre_dist < post_dist:
             wrong_direction_count += 1
         if wrong_direction_count > WRONG_DIRECTION_LIMIT:
             print("Goal given up on")
-            return False
+            return -1
+        if is_object_detected():
+            print("Object detected")
+            return -2
+        else:
+            return 0
 
 
 def main():
