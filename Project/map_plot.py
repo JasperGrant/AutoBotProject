@@ -1,4 +1,4 @@
-# Map Generation Functions for the Gerard SLAM project
+# Map Plot Generation Functions for the Gerard SLAM project
 # Written by Jasper Grant and Michael MacGillivray
 # 2024-04-06
 

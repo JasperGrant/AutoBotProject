@@ -19,9 +19,11 @@ from time import time
 button = Button()
 
 WAYPOINT_FOLLOW_CONSTANT_PRIORITY = 6
-SCAN_SLOPE_PRIORITY = 0.1
+SCAN_SLOPE_PRIORITY = 0.2
 OBSTACLE_NOT_DETECTED_CONSTANT_PRIORITY = 2
 OBSTACLE_DETECTED_CONSTANT_PRIORITY = 7
+OBJECT_DETECTED_CONSTANT_SCAN_PRIORITY = 8
+OBSTACLE_DETECTED_SCAN_FREQUENCY = 5
 
 
 def get_distance_since_last_scan():
@@ -135,7 +137,17 @@ def scan():
 
 
 def scan_priority():
-    return "scan", SCAN_SLOPE_PRIORITY * get_distance_since_last_scan(), scan
+    is_object_detected()
+    return (
+        "scan",
+        (
+            OBJECT_DETECTED_CONSTANT_SCAN_PRIORITY
+            if is_object_detected()
+            and get_distance_since_last_scan() > OBSTACLE_DETECTED_SCAN_FREQUENCY
+            else SCAN_SLOPE_PRIORITY * get_distance_since_last_scan()
+        ),
+        scan,
+    )
 
 
 def obstacle_avoid():
