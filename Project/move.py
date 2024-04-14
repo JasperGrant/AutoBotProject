@@ -171,11 +171,15 @@ def move_forward(left_motor, right_motor, x_goal, y_goal, theta_goal):
     global pose_past
 
     wrong_direction_count = 0
+    print("Moving forward")
+    print(pose_past)
+    print(x_goal, y_goal, theta_goal)
 
     while (
         sqrt((x_goal - pose_past[0]) ** 2 + (y_goal - pose_past[1]) ** 2)
         > DISTANCE_FOR_EQUALITY
     ):
+        print("Moving forward lolol")
         pre_dist = sqrt((x_goal - pose_past[0]) ** 2 + (y_goal - pose_past[1]) ** 2)
         pose_past = velocity_controller(
             left_motor,
@@ -196,8 +200,7 @@ def move_forward(left_motor, right_motor, x_goal, y_goal, theta_goal):
         if is_object_detected():
             print("Object detected")
             return -2
-        else:
-            return 0
+    return 0
 
 
 def main():

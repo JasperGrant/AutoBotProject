@@ -19,7 +19,7 @@ from time import time
 button = Button()
 
 WAYPOINT_FOLLOW_CONSTANT_PRIORITY = 6
-SCAN_SLOPE_PRIORITY = 4
+SCAN_SLOPE_PRIORITY = 0.1
 OBSTACLE_NOT_DETECTED_CONSTANT_PRIORITY = 2
 OBSTACLE_DETECTED_CONSTANT_PRIORITY = 7
 
@@ -29,18 +29,59 @@ def get_distance_since_last_scan():
     return time() - time_since_last_scan
 
 
-y_goal = [30, 60, 90, 140, 140, 140, 140, 90, 60, 30, 0]
+y_goal = [
+    30,
+    50,
+    70,
+    90,
+    110,
+    140,
+    140,
+    140,
+    140,
+    140,
+    140,
+    120,
+    100,
+    80,
+    60,
+    30,
+    0,
+]
 
-x_goal = [50, 50, 50, 50, 80, 110, 140, 140, 140, 140, 140]
-
+x_goal = [
+    40,
+    40,
+    40,
+    40,
+    40,
+    40,
+    60,
+    80,
+    100,
+    120,
+    160,
+    160,
+    160,
+    160,
+    160,
+    160,
+    160,
+]
 theta_goal = [
     pi / 2,
     pi / 2,
     pi / 2,
     pi / 2,
+    pi / 2,
+    pi / 2,
     0,
     0,
     0,
+    0,
+    0,
+    -pi / 2,
+    -pi / 2,
     -pi / 2,
     -pi / 2,
     -pi / 2,
@@ -63,19 +104,23 @@ def waypoint_follow():
         right_motor,
         x_goal[goals_reached],
         y_goal[goals_reached],
+        # y_goal[goals_reached],
         theta_goal[goals_reached],
     )
     if move_result == -2:
+        print("Obstacle Detected")
         left_motor.stop()
         right_motor.stop()
         return
     if move_result == -1:
+        left_motor.stop()
+        right_motor.stop()
         return
     if move_result == 0:
+        print("Goal Reached")
         goals_reached += 1
-
-    left_motor.stop()
-    right_motor.stop()
+        left_motor.stop()
+        right_motor.stop()
 
 
 def waypoint_follow_priority():
@@ -85,7 +130,8 @@ def waypoint_follow_priority():
 def scan():
     cardinal_direction_sensor_scan(60, 5, pose_past)
     wall_identification(point_map)
-    pass
+    global time_since_last_scan
+    time_since_last_scan = time()
 
 
 def scan_priority():
@@ -95,7 +141,6 @@ def scan_priority():
 def obstacle_avoid():
     while 1:
         print("Obstacle detected")
-    pass
 
 
 def obstacle_avoid_priority():
@@ -139,16 +184,19 @@ def arbitrator():
     while not button.any():
         print("Calculating Priorities")
         priorities = [priority() for priority in priority_functions]
+        print("HELLO", priorities)
         behavior_file = open("behavior.txt", "a")
         behavior_file.write(
-            str(priorities[0])
+            str(priorities[0][1])
             + ","
-            + str(priorities[1])
+            + str(priorities[1][1])
             + ","
-            + str(priorities[2] + "\n")
+            + str(priorities[2][1])
+            + "\n"
         )
         behavior_file.close()
-        behavior = priorities.sort(key=lambda x: x[1])[-1]
+        behavior = max(priorities, key=lambda x: x[1])
+
         print(behavior[0])
         behavior[2]()
 
