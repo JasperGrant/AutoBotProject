@@ -53,22 +53,6 @@ def transform_distance_to_coordinate(distance, angle, robot_pose):
     ]
 
 
-# def sensor_scan(width, resolution, robot_pose):
-#     points = []
-#     for angle in range(0, -width, -resolution):
-#         move_servo_to_angle(angle)
-#         distance = get_ultrasonic_distance()
-#         if distance == 255:
-#             continue
-#         map_file = open("map.txt", "a")
-#         point = transform_distance_to_coordinate(distance, -angle, robot_pose)
-#         points.append(point)
-
-#         map_file.close()
-#         sleep(0.2)
-#     return points
-
-
 def sensor_scan(width, resolution, robot_pose):
     points = []
     for angle in range(0, -width, -resolution):
@@ -78,12 +62,12 @@ def sensor_scan(width, resolution, robot_pose):
             distance = get_ultrasonic_distance()
             if distance != 255:
                 distances.append(distance)
-                points_file = open("points.txt", "a")
+                points_file = open("points.csv", "a")
                 points_file.write(str(point[0]) + " , " + str(point[1]) + "\n")
                 points_file.close()
         if distances:
             averaged_distance = sum(distances) / len(distances)
-            map_file = open("map.txt", "a")
+            map_file = open("map.csv", "a")
             point = transform_distance_to_coordinate(
                 averaged_distance, -angle, robot_pose
             )
@@ -113,11 +97,11 @@ def cardinal_direction_sensor_scan(width, resolution, robot_pose):
             for _ in range(5):  # Take three measurements
                 distance = get_ultrasonic_distance()
                 distances.append(distance)
-                points_file = open("points.txt", "a")
+                points_file = open("points.csv", "a")
                 points_file.write(str(distance))
                 points_file.close()
             averaged_distance = sum(distances) / len(distances)
-            map_file = open("map.txt", "a")
+            map_file = open("map.csv", "a")
             point = transform_distance_to_coordinate(
                 averaged_distance - RANGE_SCAN_OFFSET, angle, robot_pose
             )
@@ -188,7 +172,7 @@ def wall_identification(data):
     walls.append(get_horizontal_line(data[1], "U"))
     walls.append(get_vertical_line(data[2], "L"))
     walls.append(get_horizontal_line(data[3], "D"))
-    map_file = open("map.txt", "a")
+    map_file = open("map.csv", "a")
 
     corners = [
         (walls[0][0][0], walls[1][0][1]),
@@ -209,11 +193,11 @@ def wall_identification(data):
 if __name__ == "__main__":
     servo.reset()
     # Clear map file
-    map_file = open("map.txt", "w")
+    map_file = open("map.csv", "w")
     map_file.write("")
     map_file.close()
 
-    points_file = open("points.txt", "w")
+    points_file = open("points.csv", "w")
     points_file.write("")
     points_file.close()
 

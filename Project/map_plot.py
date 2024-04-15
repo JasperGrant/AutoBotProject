@@ -78,7 +78,7 @@ def wall_identification(data):
     return walls
 
 
-map_file = open("map_3.txt", "r").read()
+map_file = open("map.csv", "r").read()
 points = [point.split(",") for point in map_file.split("\n") if point]
 # Change points into four groups by value of first char
 group_of_points = [

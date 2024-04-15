@@ -143,19 +143,19 @@ def arbitrator():
     # reset avoidance servo to zero
     reset_avoidance_servo()
     # Clear the map file
-    map_file = open("map.txt", "w")
+    map_file = open("map.csv", "w")
     map_file.write("")
     map_file.close()
 
     # Clear the behavior file
-    behavior_file = open("behavior.txt", "w")
+    behavior_file = open("behavior.csv", "w")
     behavior_file.write("")
     behavior_file.close()
 
     while not button.any():
         print("Calculating Priorities")
         priorities = [priority() for priority in priority_functions]
-        behavior_file = open("behavior.txt", "a")
+        behavior_file = open("behavior.csv", "a")
         behavior_file.write(
             str(time())
             + ","

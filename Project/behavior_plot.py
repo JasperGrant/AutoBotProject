@@ -5,7 +5,7 @@
 import matplotlib.pyplot as plt
 
 # Open the file and read data
-priority_file = open("behavior.txt", "r").read()
+priority_file = open("behavior.csv", "r").read()
 # Split the data into a list of step priorities
 priorities = [priority.split(",") for priority in priority_file.split("\n") if priority]
 # List behaviors
