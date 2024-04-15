@@ -9,7 +9,7 @@ from math import degrees, pi, atan2
 from EV3_math_modules import clamp
 from detect import (
     avoidance_ultrasonic_sensor,
-    alert_callback,
+    is_object_detected,
     move_avoidance_servo_to_angle,
 )
 from move import left_motor, right_motor, pose_past, goals_reached, x_goal, y_goal
@@ -31,7 +31,6 @@ def get_goal_angle():
 
 
 def follow_wall(direction="L"):
-
     # Read survey angle
     move_avoidance_servo_to_angle(90)
     survey_angle_reading = avoidance_ultrasonic_sensor.distance_centimeters
@@ -56,4 +55,4 @@ def follow_wall(direction="L"):
     right_motor.on(speed=motor_speeds[1])
     move_avoidance_servo_to_angle(get_goal_angle() + pose_past[2])
     # Return true if wall is no longer in goal direction
-    return not alert_callback()
+    return not is_object_detected()

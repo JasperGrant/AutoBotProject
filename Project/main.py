@@ -6,7 +6,7 @@
 
 from math import pi
 from ev3dev2.button import Button
-from detect import is_object_detected, reset_avoidance_servo
+from detect import is_object_detected, reset_avoidance_servo, avoidance_in_progress
 from avoid import follow_wall
 from sensor import (
     reset_servo,
@@ -104,6 +104,7 @@ def scan_priority():
 
 
 def obstacle_avoid():
+    global avoidance_in_progress
     avoidance_in_progress = True
     # Fully scan object
     # Decide which direction to go
