@@ -12,16 +12,19 @@ priorities = [priority.split(",") for priority in priority_file.split("\n") if p
 behaviors = ["Waypoint Follow", "Scan", "Obstacle Avoid"]
 # Group the priorities by behavior in a dictionary
 grouped_priorities = [
-    {behaviors[i]: [float(priority[i]) for priority in priorities]} for i in range(3)
+    {behaviors[i - 1]: [float(priority[i]) for priority in priorities]}
+    for i in range(1, 4)
 ]
+initial_time = float(priorities[0][0])
+times = [float(priority[0]) - initial_time for priority in priorities]
 
-# Plotting the priority of each behavior each step
+# Plot the data
+plt.figure()
 for behavior in grouped_priorities:
-    for key in behavior:
-        plt.plot(behavior[key], label=key)
-plt.xlabel("Step")
-plt.xticks(range(0, len(priorities), 1))
-plt.ylabel("Priority")
-plt.title("Behavior Priorities Each Step")
+    for key, value in behavior.items():
+        plt.plot(times, value, label=key)
 plt.legend()
+plt.xlabel("Time")
+plt.ylabel("Priority")
+plt.title("Behavior Priorities")
 plt.show()

@@ -53,7 +53,6 @@ def get_horizontal_line(points, line, resolution=1):
         limit = 0
     # If selected point is too far from nearest neighbour, remove it
     while abs(line_location - limit) > NEAREST_NEIGHBOUR_LIMIT:
-        print(line_location)
         line_locations.pop()
         if line_locations == []:
             return [(-50, -50), (-50, -50)]

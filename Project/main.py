@@ -152,20 +152,19 @@ def arbitrator():
     while not button.any():
         print("Calculating Priorities")
         priorities = [priority() for priority in priority_functions]
-        print("HELLO", priorities)
         behavior_file = open("behavior.txt", "a")
         behavior_file.write(
-            str(priorities[0][1])
+            str(time())
+            + ","
+            + str(priorities[0][1])
             + ","
             + str(priorities[1][1])
             + ","
             + str(priorities[2][1])
-            + "\n"
+            + "\n",
         )
         behavior_file.close()
         behavior = max(priorities, key=lambda x: x[1])
-
-        print(behavior[0])
         behavior[2]()
 
 

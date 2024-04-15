@@ -4,8 +4,7 @@
 # Written by Jasper Grant and Michael MacGillivray
 # 2024-04-13
 
-from math import cos, sin, radians, degrees, pi, atan2
-from time import sleep
+from math import degrees, pi, atan2
 
 from EV3_math_modules import clamp
 from detect import (

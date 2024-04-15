@@ -77,7 +77,6 @@ def sensor_scan(width, resolution, robot_pose):
         for _ in range(3):  # Take three measurements
             distance = get_ultrasonic_distance()
             if distance != 255:
-                print(distance)
                 distances.append(distance)
                 points_file = open("points.txt", "a")
                 points_file.write(str(point[0]) + " , " + str(point[1]) + "\n")
@@ -113,8 +112,6 @@ def cardinal_direction_sensor_scan(width, resolution, robot_pose):
                 continue
             for _ in range(5):  # Take three measurements
                 distance = get_ultrasonic_distance()
-                print(distance)
-                print("okok")
                 distances.append(distance)
                 points_file = open("points.txt", "a")
                 points_file.write(str(distance))
@@ -192,7 +189,6 @@ def wall_identification(data):
     walls.append(get_vertical_line(data[2], "L"))
     walls.append(get_horizontal_line(data[3], "D"))
     map_file = open("map.txt", "a")
-    print(walls)
 
     corners = [
         (walls[0][0][0], walls[1][0][1]),
@@ -200,8 +196,6 @@ def wall_identification(data):
         (walls[2][0][0], walls[3][0][1]),
         (walls[2][0][0], walls[1][0][1]),
     ]
-    print(corners)
-
     point_map[4] = corners
     assert len(corners) == 4
     for point in corners:
