@@ -22,6 +22,8 @@ avoidance_ultrasonic_sensor = UltrasonicSensor(address=INPUT_1)
 
 avoidance_in_progress = False
 
+avoidance_servo_mutex = threading.Lock()
+
 OBJECT_DETECTION_DISTANCE = 10
 
 
@@ -34,24 +36,19 @@ def is_object_detected():
 
 
 def move_avoidance_servo_to_angle(angle, speed=10, callback=lambda: sleep(0.1)):
-    while avoidance_servo.is_running:
-        if callback():
-            avoidance_servo.off()
-            return True
-    avoidance_servo.on_to_position(speed, angle)
-    while avoidance_servo.is_running:
-        if callback():
-            avoidance_servo.off()
-            return True
+    with avoidance_servo_mutex:
+        avoidance_servo.on_to_position(speed, angle)
+        while avoidance_servo.is_running:
+            if callback():
+                avoidance_servo.off()
+                return True
 
 
 def front_sensor_continous_scan():
     while True:
         if not avoidance_in_progress:
-            avoidance_servo.on_to_position(10, 45)
-            sleep(1)
-            avoidance_servo.on_to_position(10, -45)
-            sleep(1)
+            move_avoidance_servo_to_angle(45)
+            move_avoidance_servo_to_angle(-45)
 
 
 scanning_thread = threading.Thread(target=front_sensor_continous_scan)
