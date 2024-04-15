@@ -83,6 +83,8 @@ def waypoint_follow_priority():
 
 
 def scan():
+    left_motor.on(speed=0)
+    right_motor.on(speed=0)
     cardinal_direction_sensor_scan(60, 5, pose_past)
     wall_identification(point_map)
     global time_since_last_scan
