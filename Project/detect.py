@@ -16,6 +16,9 @@ from ev3dev2.motor import (
     OUTPUT_B,
 )
 
+AVOIDANCE_SERVO_LEFT_MAX = -45
+AVOIDANCE_SERVO_RIGHT_MAX = 45
+
 
 avoidance_servo = MediumMotor(OUTPUT_B)
 avoidance_ultrasonic_sensor = UltrasonicSensor(address=INPUT_1)
@@ -47,8 +50,8 @@ def move_avoidance_servo_to_angle(angle, speed=10, callback=lambda: sleep(0.1)):
 def front_sensor_continous_scan():
     while True:
         if not avoidance_in_progress:
-            move_avoidance_servo_to_angle(45)
-            move_avoidance_servo_to_angle(-45)
+            move_avoidance_servo_to_angle(AVOIDANCE_SERVO_LEFT_MAX)
+            move_avoidance_servo_to_angle(AVOIDANCE_SERVO_RIGHT_MAX)
 
 
 scanning_thread = threading.Thread(target=front_sensor_continous_scan)
