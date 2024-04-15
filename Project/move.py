@@ -15,7 +15,7 @@ from sensor import (
     point_map,
     get_vertical_line,
 )
-from avoid import is_object_detected
+from detect import is_object_detected
 
 # Motor inputs
 from ev3dev2.motor import (
@@ -25,6 +25,67 @@ from ev3dev2.motor import (
     OUTPUT_D,
 )
 
+goals_reached = 0
+
+y_goal = [
+    30,
+    50,
+    70,
+    90,
+    110,
+    140,
+    140,
+    140,
+    140,
+    140,
+    140,
+    120,
+    100,
+    80,
+    60,
+    30,
+    0,
+]
+
+x_goal = [
+    40,
+    40,
+    40,
+    40,
+    40,
+    40,
+    60,
+    80,
+    100,
+    120,
+    160,
+    160,
+    160,
+    160,
+    160,
+    160,
+    160,
+]
+theta_goal = [
+    pi / 2,
+    pi / 2,
+    pi / 2,
+    pi / 2,
+    pi / 2,
+    pi / 2,
+    0,
+    0,
+    0,
+    0,
+    0,
+    -pi / 2,
+    -pi / 2,
+    -pi / 2,
+    -pi / 2,
+    -pi / 2,
+    -pi / 2,
+]
+
 # # Sensor inputs
 # from ev3dev2.sensor import INPUT_1, INPUT_4
 
@@ -33,7 +94,6 @@ from ev3dev2.motor import (
 
 
 # Set up robot as tank along with sensors
-robot = MoveTank(OUTPUT_D, OUTPUT_A)
 left_motor = LargeMotor(OUTPUT_D)
 right_motor = LargeMotor(OUTPUT_A)
 

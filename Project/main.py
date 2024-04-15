@@ -6,14 +6,25 @@
 
 from math import pi
 from ev3dev2.button import Button
-from avoid import is_object_detected
+from detect import is_object_detected, reset_avoidance_servo
+from avoid import follow_wall
 from sensor import (
     reset_servo,
     cardinal_direction_sensor_scan,
     wall_identification,
     point_map,
 )
-from move import pose_past, left_motor, right_motor, move_forward, turn
+from move import (
+    pose_past,
+    left_motor,
+    right_motor,
+    move_forward,
+    turn,
+    x_goal,
+    y_goal,
+    theta_goal,
+    goals_reached,
+)
 from time import time
 
 button = Button()
@@ -25,70 +36,12 @@ OBSTACLE_DETECTED_CONSTANT_PRIORITY = 7
 OBJECT_DETECTED_CONSTANT_SCAN_PRIORITY = 8
 OBSTACLE_DETECTED_SCAN_FREQUENCY = 5
 
+avoidance_in_progress = False
+
 
 def get_distance_since_last_scan():
     # Time since last scan in seconds
     return time() - time_since_last_scan
-
-
-y_goal = [
-    30,
-    50,
-    70,
-    90,
-    110,
-    140,
-    140,
-    140,
-    140,
-    140,
-    140,
-    120,
-    100,
-    80,
-    60,
-    30,
-    0,
-]
-
-x_goal = [
-    40,
-    40,
-    40,
-    40,
-    40,
-    40,
-    60,
-    80,
-    100,
-    120,
-    160,
-    160,
-    160,
-    160,
-    160,
-    160,
-    160,
-]
-theta_goal = [
-    pi / 2,
-    pi / 2,
-    pi / 2,
-    pi / 2,
-    pi / 2,
-    pi / 2,
-    0,
-    0,
-    0,
-    0,
-    0,
-    -pi / 2,
-    -pi / 2,
-    -pi / 2,
-    -pi / 2,
-    -pi / 2,
-    -pi / 2,
-]
 
 
 def waypoint_follow():
@@ -151,8 +104,12 @@ def scan_priority():
 
 
 def obstacle_avoid():
-    while 1:
-        print("Obstacle detected")
+    avoidance_in_progress = True
+    # Fully scan object
+    # Decide which direction to go
+    # Wall follow in that direction
+    if follow_wall("L"):
+        avoidance_in_progress = False
 
 
 def obstacle_avoid_priority():
@@ -160,7 +117,7 @@ def obstacle_avoid_priority():
         "avoid",
         (
             OBSTACLE_DETECTED_CONSTANT_PRIORITY
-            if is_object_detected()
+            if avoidance_in_progress or is_object_detected()
             else OBSTACLE_NOT_DETECTED_CONSTANT_PRIORITY
         ),
         obstacle_avoid,
@@ -175,14 +132,13 @@ time_since_last_scan = time()
 
 priority_functions = [waypoint_follow_priority, scan_priority, obstacle_avoid_priority]
 
-goals_reached = 0
-
 
 def arbitrator():
 
     # reset servo motor to zero
     reset_servo()
-
+    # reset avoidance servo to zero
+    reset_avoidance_servo()
     # Clear the map file
     map_file = open("map.txt", "w")
     map_file.write("")
