@@ -50,8 +50,11 @@ def move_avoidance_servo_to_angle(angle, speed=10, callback=lambda: sleep(0.1)):
 def front_sensor_continous_scan():
     while True:
         if not avoidance_in_progress:
+            reset_avoidance_servo()
             move_avoidance_servo_to_angle(AVOIDANCE_SERVO_LEFT_MAX)
             move_avoidance_servo_to_angle(AVOIDANCE_SERVO_RIGHT_MAX)
+            move_avoidance_servo_to_angle(0)
+            print("Scanning out front")
 
 
 scanning_thread = threading.Thread(target=front_sensor_continous_scan)

@@ -34,6 +34,7 @@ def get_goal_angle():
 
 def follow_wall(direction="L"):
     # Read survey angle
+    print("Following wall")
     move_avoidance_servo_to_angle(90)
     survey_angle_reading = avoidance_ultrasonic_sensor.distance_centimeters
 
@@ -52,12 +53,12 @@ def follow_wall(direction="L"):
     )
     # Handle wall in front
     if wall_in_front:
-        motor_speeds = (-MOTOR_LOW, MOTOR_HIGH)
+        motor_speeds = (-MOTOR_LOW, MOTOR_LOW)
     left_motor.on(speed=motor_speeds[0])
     right_motor.on(speed=motor_speeds[1])
     # If goal angle is withing front servo range
     # Turn to goal angle, check if blocked
     # Else return False
-    move_avoidance_servo_to_angle(get_goal_angle() + pose_past[2])
+    move_avoidance_servo_to_angle((get_goal_angle() - pose_past[2]))
     # Return true if wall is no longer in goal direction
     return not is_object_detected()
