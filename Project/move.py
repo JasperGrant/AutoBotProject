@@ -10,12 +10,8 @@ from ev3dev2.button import Button
 from motion_controller import velocity_controller
 from detect import get_avoidance_in_progress
 
-# Motor inputs
-from ev3dev2.motor import (
-    LargeMotor,
-    OUTPUT_A,
-    OUTPUT_D,
-)
+
+from odometry import get_pose_past
 
 goals_reached = 0
 
@@ -33,14 +29,10 @@ for line in goals_file:
         y_goal.append(float(y))
         theta_goal.append(float(theta))
 
-# Set up robot as tank along with sensors
-left_motor = LargeMotor(OUTPUT_D)
-right_motor = LargeMotor(OUTPUT_A)
 
 # Set up buttons
 button = Button()
 
-pose_past = [40, 0, pi / 2]
 # thresholds for setpoint tracker
 NUM_DEGREES_FOR_EQUALITY = 3 * pi / 180
 DISTANCE_FOR_EQUALITY = 5
@@ -52,15 +44,15 @@ WIDTH_GOAL = 100
 
 
 def turn(left_motor, right_motor, theta_goal):
-    global pose_past
-    while abs(pose_past[2] - theta_goal) > (NUM_DEGREES_FOR_EQUALITY):
-        pose_past = velocity_controller(
+    pose_past = get_pose_past()
+
+    while abs(get_pose_past()[2] - theta_goal) > (NUM_DEGREES_FOR_EQUALITY):
+        velocity_controller(
             left_motor,
             right_motor,
             pose_past[0],
             pose_past[1],
             theta_goal,
-            pose_past,
             is_turning=True,
         )
         if get_avoidance_in_progress():
@@ -69,7 +61,7 @@ def turn(left_motor, right_motor, theta_goal):
 
 
 def move_forward(left_motor, right_motor, x_goal, y_goal, theta_goal):
-    global pose_past
+    pose_past = get_pose_past()
 
     wrong_direction_count = 0
     # print("Moving forward")
@@ -77,17 +69,16 @@ def move_forward(left_motor, right_motor, x_goal, y_goal, theta_goal):
     # print(x_goal, y_goal, theta_goal)
 
     while (
-        sqrt((x_goal - pose_past[0]) ** 2 + (y_goal - pose_past[1]) ** 2)
+        sqrt((x_goal - get_pose_past()[0]) ** 2 + (y_goal - get_pose_past()[1]) ** 2)
         > DISTANCE_FOR_EQUALITY
     ):
         pre_dist = sqrt((x_goal - pose_past[0]) ** 2 + (y_goal - pose_past[1]) ** 2)
-        pose_past = velocity_controller(
+        velocity_controller(
             left_motor,
             right_motor,
             x_goal,
             y_goal,
             theta_goal,
-            pose_past,
             is_turning=False,
         )
         post_dist = sqrt((x_goal - pose_past[0]) ** 2 + (y_goal - pose_past[1]) ** 2)

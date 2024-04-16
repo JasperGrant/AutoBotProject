@@ -1,16 +1,10 @@
 #!/usr/bin/env python3
 
-from math import pi, sin, cos, atan2, sqrt
+from math import atan2, sqrt
 import EV3_math_modules as ev3_math
-from time import sleep, time
 
-# Assuming we are on a line to start
-# Number of readings for the robot to think it is going in the wrong direction
-WRONG_DIRECTION_LIMIT = 10
+from odometry import BASE_WIDTH, get_pose_past
 
-
-NUM_DEGREES_FOR_EQUALITY = 3 * pi / 180
-DISTANCE_FOR_EQUALITY = 2
 
 # Velocity controller Gains
 K_RHO = 0.7
@@ -19,65 +13,22 @@ K_BETA = -0.5
 
 # EV3 Parameters
 BASE_WIDTH = 13  # cm
-TIRE_DIAMETER = 5.8  # cm
-
-
-def get_wheel_velocity(left_motor, right_motor, TIME):
-    start_time = time()
-    prev_left_encoder = left_motor.position
-    prev_right_encoder = right_motor.position
-    sleep(TIME)
-    curr_left_encoder = left_motor.position
-    curr_right_encoder = right_motor.position
-
-    left_encoder_diff = curr_left_encoder - prev_left_encoder
-    right_encoder_diff = curr_right_encoder - prev_right_encoder
-
-    wheel_radius = TIRE_DIAMETER / 2
-
-    left_distance = (left_encoder_diff / 360) * 2 * pi * wheel_radius
-    right_distance = (right_encoder_diff / 360) * 2 * pi * wheel_radius
-
-    end_time = time()
-    delta_t = end_time - start_time
-
-    left_velocity = left_distance / delta_t
-    right_velocity = right_distance / delta_t
-
-    # print("Left wheel velocity:", left_velocity)
-    # print("Right wheel velocity:", right_velocity)
-    # print("Delta t:", delta_t)
-
-    return left_velocity, right_velocity, delta_t
 
 
 def velocity_controller(
-    left_motor, right_motor, x_goal, y_goal, theta_goal, pose_past, is_turning=False
+    left_motor, right_motor, x_goal, y_goal, theta_goal, is_turning=False
 ):
     # Pull velocity and time step values from encoders (Needs work)
 
-    TIME = 0.5
+    pose_past = get_pose_past()
 
-    l_velo_current, r_velo_current, delta_t = get_wheel_velocity(
-        left_motor, right_motor, TIME
-    )
-
-    # Calc linear and angular velocity
-    x_dot = cos(pose_past[2]) * ((l_velo_current + r_velo_current) / 2)
-    y_dot = sin(pose_past[2]) * ((l_velo_current + r_velo_current) / 2)
-    omega = (r_velo_current - l_velo_current) / BASE_WIDTH
-
-    theta_current = pose_past[2] + omega * delta_t
-    x_current = pose_past[0] + x_dot * delta_t
-    y_current = pose_past[1] + y_dot * delta_t
-
-    rho = sqrt((x_goal - x_current) ** 2 + (y_goal - y_current) ** 2)
+    rho = sqrt((x_goal - pose_past[0]) ** 2 + (y_goal - pose_past[1]) ** 2)
     alpha = (
-        (atan2((y_goal - y_current), (x_goal - x_current)) - theta_current)
+        (atan2((y_goal - pose_past[1]), (x_goal - pose_past[0])) - pose_past[2])
         if not is_turning
-        else theta_goal - theta_current
+        else theta_goal - pose_past[2]
     )
-    beta = theta_goal - theta_current - alpha
+    beta = theta_goal - pose_past[2] - alpha
 
     # Calculate new velocity for input into motor driver for next time step
     velo = K_RHO * rho
@@ -97,33 +48,6 @@ def velocity_controller(
 
     left_velocity = velo - omega * BASE_WIDTH
     right_velocity = velo + omega * BASE_WIDTH
-    # scale = abs(left_velocity/right_velocity)
-    # if left_velocity < 20 and right_velocity < 20:
-    #     speed_l=clamp(left_velocity,20, 70)
-    #     speed_r=clamp(right_velocity,20, 70)/scale
-
-    # print("Left wheel velocity:", left_velocity)
-    # print("Right wheel velocity:", right_velocity)
-
-    # print("Linear velocity:", velo_)
-    # print("x_dot:", x_dot)
-    # print("y_dot:", y_dot)
-    # print("Angular velocity:", omega)
-    # print("Updated theta:", theta_current)
-    # print("Updated x:", x_current)
-    # print("Updated y:", y_current)
-    # print("Rho:", rho)
-    # print("Alpha:", alpha)
-    # print("Beta:", beta)
-    # print("New linear velocity command:", velo)
-    # print("New angular velocity command:", omega)
-    # print("Left wheel velocity:", left_velocity)
-    # print("Right wheel velocity:", right_velocity)
 
     left_motor.on(speed=left_velocity)
     right_motor.on(speed=right_velocity)
-
-    # Store previous pose for next loop
-    pose_past = [x_current, y_current, ev3_math.circle_minus(theta_current)]
-    # print("Pose:", pose_past)
-    return pose_past

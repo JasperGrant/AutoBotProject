@@ -4,7 +4,8 @@
 # Written by Jasper Grant and Michael MacGillivray
 # 2024-04-13
 
-from math import degrees, pi, atan2
+from math import degrees, pi, atan2, cos, sin
+from time import time
 
 from EV3_math_modules import clamp
 from detect import (
@@ -14,17 +15,20 @@ from detect import (
     AVOIDANCE_SERVO_RIGHT_MAX,
     AVOIDANCE_SERVO_LEFT_MAX,
 )
-from move import left_motor, right_motor, pose_past, goals_reached, x_goal, y_goal
+from move import goals_reached, x_goal, y_goal
 
-MOTOR_BASE_SPEED = 10
+from odometry import get_pose_past, left_motor, right_motor
+
+MOTOR_BASE_SPEED = 5
 MOTOR_HIGH = 10
-MOTOR_LOW = 8
+MOTOR_LOW = 5
 k = 0.1
 
 WALL_DISTANCE = 20
 
 
-def get_goal_angle():
+def get_goal_angle(pose_past):
+    print("goals number", goals_reached)
     return degrees(
         atan2(
             y_goal[goals_reached] - pose_past[1], x_goal[goals_reached] - pose_past[0]
@@ -32,13 +36,22 @@ def get_goal_angle():
     )
 
 
+def check_distance_to_goal(pose_past):
+    if get_goal_angle(pose_past) > 0:
+        global goals_reached
+        goals_reached += 1
+
+
 def follow_wall(direction="L"):
+    print(time())
     # Read survey angle
     print("Following wall")
     move_avoidance_servo_to_angle(-70)
     survey_angle_reading = avoidance_ultrasonic_sensor.distance_centimeters
 
-    error = clamp(WALL_DISTANCE - survey_angle_reading, -1000, 40)
+    error = clamp(WALL_DISTANCE - survey_angle_reading, -40, 40)
+
+    print("Error: ", error)
 
     motor_input_change = k * error
 
@@ -56,9 +69,24 @@ def follow_wall(direction="L"):
         motor_speeds = (-MOTOR_LOW, MOTOR_LOW)
     left_motor.on(speed=motor_speeds[0])
     right_motor.on(speed=motor_speeds[1])
+
+    pose_past = get_pose_past()
+
+    check_distance_to_goal(pose_past)
     # If goal angle is withing front servo range
     # Turn to goal angle, check if blocked
     # Else return False
-    move_avoidance_servo_to_angle((get_goal_angle() - pose_past[2]))
-    # Return true if wall is no longer in goal direction
-    return not is_object_detected()
+    goal_angle = get_goal_angle(pose_past)
+    print("Goal angle: ", goal_angle)
+    print("Pose: ", degrees(pose_past[2]))
+
+    if (
+        AVOIDANCE_SERVO_LEFT_MAX <= (goal_angle - degrees(pose_past[2]))
+        and (goal_angle - degrees(pose_past[2])) <= AVOIDANCE_SERVO_RIGHT_MAX
+    ):
+        move_avoidance_servo_to_angle((goal_angle - pose_past[2]))
+        return not is_object_detected()
+
+    print(time())
+
+    return False

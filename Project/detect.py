@@ -37,7 +37,7 @@ def set_avoidance_in_progress(value):
 
 avoidance_servo_mutex = threading.Lock()
 
-OBJECT_DETECTION_DISTANCE = 10
+OBJECT_DETECTION_DISTANCE = 20
 
 
 def reset_avoidance_servo():
@@ -49,11 +49,12 @@ def is_object_detected():
 
 
 def move_avoidance_servo_to_angle(angle, speed=10):
-    avoidance_servo.on_to_position(speed, angle)
-    starting_time = time()
-    while time() - starting_time < 0.5:
-        if is_object_detected():
-            set_avoidance_in_progress(True)
+    with avoidance_servo_mutex:
+        avoidance_servo.on_to_position(speed, angle)
+        starting_time = time()
+        while time() - starting_time < 0.5:
+            if is_object_detected():
+                set_avoidance_in_progress(True)
 
 
 def front_sensor_continous_scan():
@@ -61,7 +62,9 @@ def front_sensor_continous_scan():
     while True:
         if not get_avoidance_in_progress():
             move_avoidance_servo_to_angle(AVOIDANCE_SERVO_LEFT_MAX)
+            move_avoidance_servo_to_angle(0)
             move_avoidance_servo_to_angle(AVOIDANCE_SERVO_RIGHT_MAX)
+            move_avoidance_servo_to_angle(0)
         else:
             sleep(1)
 

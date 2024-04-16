@@ -19,9 +19,6 @@ from sensor import (
     point_map,
 )
 from move import (
-    pose_past,
-    left_motor,
-    right_motor,
     move_forward,
     turn,
     x_goal,
@@ -29,6 +26,7 @@ from move import (
     theta_goal,
     goals_reached,
 )
+from odometry import get_pose_past, left_motor, right_motor
 from time import time
 
 button = Button()
@@ -48,6 +46,8 @@ def get_distance_since_last_scan():
 
 def waypoint_follow():
     global goals_reached
+
+    pose_past = get_pose_past()
 
     # TODO: Make move_forward and turn interruptible
     if pose_past[2] - theta_goal[goals_reached] > 10 * pi / 180:
@@ -87,7 +87,7 @@ def waypoint_follow_priority():
 def scan():
     left_motor.on(speed=0)
     right_motor.on(speed=0)
-    cardinal_direction_sensor_scan(60, 5, pose_past)
+    cardinal_direction_sensor_scan(60, 5, get_pose_past())
     wall_identification(point_map)
     global time_since_last_scan
     time_since_last_scan = time()
@@ -112,8 +112,8 @@ def obstacle_avoid():
     # Decide which direction to go
     # Wall follow in that direction
     follow_wall("L")
-    # if follow_wall("L"):
-    #     set_avoidance_in_progress(False)
+    if follow_wall("L"):
+        set_avoidance_in_progress(False)
 
 
 def obstacle_avoid_priority():
