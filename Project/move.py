@@ -8,7 +8,7 @@ from math import pi, sqrt
 from time import sleep, time
 from ev3dev2.button import Button
 from motion_controller import velocity_controller
-from detect import is_object_detected
+from detect import get_avoidance_in_progress
 
 # Motor inputs
 from ev3dev2.motor import (
@@ -63,7 +63,7 @@ def turn(left_motor, right_motor, theta_goal):
             pose_past,
             is_turning=True,
         )
-        if is_object_detected():
+        if get_avoidance_in_progress():
             print("Object detected")
             return -2
 
@@ -73,8 +73,8 @@ def move_forward(left_motor, right_motor, x_goal, y_goal, theta_goal):
 
     wrong_direction_count = 0
     # print("Moving forward")
-    print(pose_past)
-    print(x_goal, y_goal, theta_goal)
+    # print(pose_past)
+    # print(x_goal, y_goal, theta_goal)
 
     while (
         sqrt((x_goal - pose_past[0]) ** 2 + (y_goal - pose_past[1]) ** 2)
@@ -97,7 +97,7 @@ def move_forward(left_motor, right_motor, x_goal, y_goal, theta_goal):
         if wrong_direction_count > WRONG_DIRECTION_LIMIT:
             print("Goal given up on")
             return -1
-        if is_object_detected():
+        if get_avoidance_in_progress():
             print("Object detected")
             return -2
     return 0

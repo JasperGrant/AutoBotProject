@@ -6,7 +6,11 @@
 
 from math import pi
 from ev3dev2.button import Button
-from detect import is_object_detected, reset_avoidance_servo, avoidance_in_progress
+from detect import (
+    reset_avoidance_servo,
+    get_avoidance_in_progress,
+    set_avoidance_in_progress,
+)
 from avoid import follow_wall
 from sensor import (
     reset_servo,
@@ -34,9 +38,7 @@ SCAN_SLOPE_PRIORITY = 0.2
 OBSTACLE_NOT_DETECTED_CONSTANT_PRIORITY = 2
 OBSTACLE_DETECTED_CONSTANT_PRIORITY = 7
 OBJECT_DETECTED_CONSTANT_SCAN_PRIORITY = 8
-OBSTACLE_DETECTED_SCAN_FREQUENCY = 5
-
-avoidance_in_progress = False
+OBSTACLE_DETECTED_SCAN_FREQUENCY = 100
 
 
 def get_distance_since_last_scan():
@@ -92,12 +94,11 @@ def scan():
 
 
 def scan_priority():
-    is_object_detected()
     return (
         "scan",
         (
             OBJECT_DETECTED_CONSTANT_SCAN_PRIORITY
-            if is_object_detected()
+            if get_avoidance_in_progress()
             and get_distance_since_last_scan() > OBSTACLE_DETECTED_SCAN_FREQUENCY
             else SCAN_SLOPE_PRIORITY * get_distance_since_last_scan()
         ),
@@ -106,13 +107,13 @@ def scan_priority():
 
 
 def obstacle_avoid():
-    global avoidance_in_progress
-    avoidance_in_progress = True
+    set_avoidance_in_progress(True)
     # Fully scan object
     # Decide which direction to go
     # Wall follow in that direction
-    if follow_wall("L"):
-        avoidance_in_progress = False
+    follow_wall("L")
+    # if follow_wall("L"):
+    #     set_avoidance_in_progress(False)
 
 
 def obstacle_avoid_priority():
@@ -120,7 +121,7 @@ def obstacle_avoid_priority():
         "avoid",
         (
             OBSTACLE_DETECTED_CONSTANT_PRIORITY
-            if avoidance_in_progress or is_object_detected()
+            if get_avoidance_in_progress()
             else OBSTACLE_NOT_DETECTED_CONSTANT_PRIORITY
         ),
         obstacle_avoid,
@@ -137,11 +138,8 @@ priority_functions = [waypoint_follow_priority, scan_priority, obstacle_avoid_pr
 
 
 def arbitrator():
-
     # reset servo motor to zero
     reset_servo()
-    # reset avoidance servo to zero
-    reset_avoidance_servo()
     # Clear the map file
     map_file = open("map.csv", "w")
     map_file.write("")
@@ -154,6 +152,7 @@ def arbitrator():
 
     while not button.any():
         print("Calculating Priorities")
+        print("Object? ", get_avoidance_in_progress())
         priorities = [priority() for priority in priority_functions]
         behavior_file = open("behavior.csv", "a")
         behavior_file.write(

@@ -35,7 +35,7 @@ def get_goal_angle():
 def follow_wall(direction="L"):
     # Read survey angle
     print("Following wall")
-    move_avoidance_servo_to_angle(90)
+    move_avoidance_servo_to_angle(-70)
     survey_angle_reading = avoidance_ultrasonic_sensor.distance_centimeters
 
     error = clamp(WALL_DISTANCE - survey_angle_reading, -1000, 40)

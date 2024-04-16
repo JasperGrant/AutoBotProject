@@ -44,9 +44,9 @@ def get_wheel_velocity(left_motor, right_motor, TIME):
     left_velocity = left_distance / delta_t
     right_velocity = right_distance / delta_t
 
-    print("Left wheel velocity:", left_velocity)
-    print("Right wheel velocity:", right_velocity)
-    print("Delta t:", delta_t)
+    # print("Left wheel velocity:", left_velocity)
+    # print("Right wheel velocity:", right_velocity)
+    # print("Delta t:", delta_t)
 
     return left_velocity, right_velocity, delta_t
 
@@ -125,5 +125,5 @@ def velocity_controller(
 
     # Store previous pose for next loop
     pose_past = [x_current, y_current, ev3_math.circle_minus(theta_current)]
-    print("Pose:", pose_past)
+    # print("Pose:", pose_past)
     return pose_past
