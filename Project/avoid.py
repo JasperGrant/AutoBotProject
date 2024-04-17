@@ -19,7 +19,7 @@ from move import goals_reached, x_goal, y_goal
 
 from odometry import get_pose_past, left_motor, right_motor
 
-MOTOR_BASE_SPEED = 5
+MOTOR_BASE_SPEED = 8
 MOTOR_HIGH = 10
 MOTOR_LOW = 5
 k = 0.1
@@ -37,7 +37,7 @@ def get_goal_angle(pose_past):
 
 
 def check_distance_to_goal(pose_past):
-    if get_goal_angle(pose_past) > 0:
+    if get_goal_angle(pose_past) < 0:
         global goals_reached
         goals_reached += 1
 
@@ -46,7 +46,7 @@ def follow_wall(direction="L"):
     print(time())
     # Read survey angle
     print("Following wall")
-    move_avoidance_servo_to_angle(-70)
+    move_avoidance_servo_to_angle(-90)
     survey_angle_reading = avoidance_ultrasonic_sensor.distance_centimeters
 
     error = clamp(WALL_DISTANCE - survey_angle_reading, -40, 40)
