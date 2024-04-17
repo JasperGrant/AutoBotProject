@@ -16,8 +16,8 @@ from ev3dev2.motor import (
     OUTPUT_B,
 )
 
-AVOIDANCE_SERVO_LEFT_MAX = -45
-AVOIDANCE_SERVO_RIGHT_MAX = 45
+AVOIDANCE_SERVO_LEFT_MAX = -90
+AVOIDANCE_SERVO_RIGHT_MAX = 90
 
 
 avoidance_servo = MediumMotor(OUTPUT_B)
@@ -52,7 +52,7 @@ def move_avoidance_servo_to_angle(angle, speed=10):
     with avoidance_servo_mutex:
         avoidance_servo.on_to_position(speed, angle)
         starting_time = time()
-        while time() - starting_time < 0.5:
+        while time() - starting_time < 0.05:
             if is_object_detected():
                 set_avoidance_in_progress(True)
 
@@ -61,10 +61,10 @@ def front_sensor_continous_scan():
     reset_avoidance_servo()
     while True:
         if not get_avoidance_in_progress():
-            move_avoidance_servo_to_angle(AVOIDANCE_SERVO_LEFT_MAX)
-            move_avoidance_servo_to_angle(0)
-            move_avoidance_servo_to_angle(AVOIDANCE_SERVO_RIGHT_MAX)
-            move_avoidance_servo_to_angle(0)
+            for i in range(-90, 90, 30):
+                move_avoidance_servo_to_angle(i)
+            for i in range(90, -90, -30):
+                move_avoidance_servo_to_angle(i)
         else:
             sleep(1)
 

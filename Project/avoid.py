@@ -15,7 +15,7 @@ from detect import (
     AVOIDANCE_SERVO_RIGHT_MAX,
     AVOIDANCE_SERVO_LEFT_MAX,
 )
-from move import goals_reached, x_goal, y_goal
+from move import x_goal, y_goal
 
 from odometry import get_pose_past, left_motor, right_motor
 
@@ -26,6 +26,17 @@ k = 0.1
 
 WALL_DISTANCE = 20
 
+goals_reached = 0
+
+
+def get_goals_reached():
+    return goals_reached
+
+
+def increment_goals_reached():
+    global goals_reached
+    goals_reached += 1
+
 
 def get_goal_angle(pose_past):
     print("goals number", goals_reached)
@@ -33,13 +44,21 @@ def get_goal_angle(pose_past):
         atan2(
             y_goal[goals_reached] - pose_past[1], x_goal[goals_reached] - pose_past[0]
         )
-    )
+    ) - degrees(pose_past[2])
 
 
 def check_distance_to_goal(pose_past):
-    if get_goal_angle(pose_past) < 0:
-        global goals_reached
-        goals_reached += 1
+    goals_reached = get_goals_reached()
+    assert goals_reached < 16
+    if goals_reached <= 5:
+        if pose_past[1] > y_goal[goals_reached]:
+            increment_goals_reached()
+    elif goals_reached <= 10:
+        if pose_past[0] > x_goal[goals_reached]:
+            increment_goals_reached()
+    else:
+        if pose_past[1] < y_goal[goals_reached]:
+            increment_goals_reached()
 
 
 def follow_wall(direction="L"):
@@ -49,7 +68,7 @@ def follow_wall(direction="L"):
     move_avoidance_servo_to_angle(-90)
     survey_angle_reading = avoidance_ultrasonic_sensor.distance_centimeters
 
-    error = clamp(WALL_DISTANCE - survey_angle_reading, -40, 40)
+    error = clamp(WALL_DISTANCE - survey_angle_reading, -1000, 40)
 
     print("Error: ", error)
 
@@ -81,12 +100,19 @@ def follow_wall(direction="L"):
     print("Pose: ", degrees(pose_past[2]))
 
     if (
-        AVOIDANCE_SERVO_LEFT_MAX <= (goal_angle - degrees(pose_past[2]))
-        and (goal_angle - degrees(pose_past[2])) <= AVOIDANCE_SERVO_RIGHT_MAX
+        AVOIDANCE_SERVO_LEFT_MAX + 20 <= goal_angle
+        and goal_angle <= AVOIDANCE_SERVO_RIGHT_MAX - 20
     ):
-        move_avoidance_servo_to_angle((goal_angle - pose_past[2]))
-        return not is_object_detected()
-
-    print(time())
+        detected = False
+        for i in range(int(goal_angle) - 15, int(goal_angle) + 15, 10):
+            print("Checking angle: ", i)
+            move_avoidance_servo_to_angle(i)
+            if is_object_detected():
+                detected = True
+        # for i in range(90, -90, -30):
+        #     move_avoidance_servo_to_angle(i)
+        #     if is_object_detected():
+        #         detected = True
+        return not detected
 
     return False

@@ -13,8 +13,6 @@ from detect import get_avoidance_in_progress
 
 from odometry import get_pose_past
 
-goals_reached = 0
-
 # Load waypoints from file
 goals_file = open("goals.csv", "r")
 # Set goal lists

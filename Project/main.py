@@ -11,7 +11,7 @@ from detect import (
     get_avoidance_in_progress,
     set_avoidance_in_progress,
 )
-from avoid import follow_wall
+from avoid import follow_wall, get_goals_reached, increment_goals_reached
 from sensor import (
     reset_servo,
     cardinal_direction_sensor_scan,
@@ -24,7 +24,6 @@ from move import (
     x_goal,
     y_goal,
     theta_goal,
-    goals_reached,
 )
 from odometry import get_pose_past, left_motor, right_motor
 from time import time
@@ -45,9 +44,9 @@ def get_distance_since_last_scan():
 
 
 def waypoint_follow():
-    global goals_reached
 
     pose_past = get_pose_past()
+    goals_reached = get_goals_reached()
 
     # TODO: Make move_forward and turn interruptible
     if pose_past[2] - theta_goal[goals_reached] > 10 * pi / 180:
@@ -75,7 +74,7 @@ def waypoint_follow():
         return
     if move_result == 0:
         print("Goal Reached")
-        goals_reached += 1
+        increment_goals_reached()
         left_motor.stop()
         right_motor.stop()
 
@@ -111,7 +110,6 @@ def obstacle_avoid():
     # Fully scan object
     # Decide which direction to go
     # Wall follow in that direction
-    follow_wall("L")
     if follow_wall("L"):
         set_avoidance_in_progress(False)
 
