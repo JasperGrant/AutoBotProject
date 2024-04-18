@@ -8,9 +8,12 @@ def circle_minus(angle):
 
 
 def clamp(value, min_value, max_value):
-    if value < 0:
-        return max(min(value, -min_value), -max_value)
-    return max(min(value, max_value), min_value)
+    if value < min_value:
+        return min_value
+    elif value > max_value:
+        return max_value
+    else:
+        return value
 
 
 def matrix_addition(matrix1, matrix2):
@@ -23,6 +26,8 @@ def matrix_addition(matrix1, matrix2):
 
 
 def matrix_multiplication(matrix1, matrix2):
+    # Check whether matrices can be multiplied
+    assert len(matrix1[0]) == len(matrix2)
     result = []
     for i in range(len(matrix1)):
         result.append([])
@@ -44,6 +49,7 @@ def matrix_transpose(matrix):
 
 def matrix_inversion(matrix):
     det = matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0]
+    assert det != 0
     return [
         [matrix[1][1] / det, -matrix[0][1] / det],
         [-matrix[1][0] / det, matrix[0][0] / det],
