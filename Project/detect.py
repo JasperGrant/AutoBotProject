@@ -70,4 +70,5 @@ def front_sensor_continous_scan():
 
 
 scanning_thread = threading.Thread(target=front_sensor_continous_scan)
+scanning_thread.daemon = True
 scanning_thread.start()
