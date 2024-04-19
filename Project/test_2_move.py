@@ -9,7 +9,8 @@ def test_turn_object_detected(mocker):
     mocker.patch("threading.Thread.start")
     mocker.patch("builtins.open")
     mocker.patch(
-        "detect.get_avoidance_in_progress", side_effect=[True, True] + [False] * 10
+        "detect.get_avoidance_in_progress",
+        side_effect=[True, True] + [False] * 10,
     )
     mocker.patch("move.velocity_controller")
     from move import turn

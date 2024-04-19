@@ -53,6 +53,7 @@ def get_wheel_velocity(left_motor, right_motor, TIME):
     sleep(TIME)
     curr_left_encoder = left_motor.position
     curr_right_encoder = right_motor.position
+    end_time = time()
 
     left_encoder_diff = curr_left_encoder - prev_left_encoder
     right_encoder_diff = curr_right_encoder - prev_right_encoder
@@ -62,7 +63,6 @@ def get_wheel_velocity(left_motor, right_motor, TIME):
     left_distance = (left_encoder_diff / 360) * 2 * pi * wheel_radius
     right_distance = (right_encoder_diff / 360) * 2 * pi * wheel_radius
 
-    end_time = time()
     delta_t = end_time - start_time
 
     left_velocity = left_distance / delta_t

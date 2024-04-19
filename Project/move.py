@@ -39,6 +39,10 @@ def get_y_goal():
     return y_goal
 
 
+def get_theta_goal():
+    return theta_goal
+
+
 # Set up buttons
 button = Button()
 

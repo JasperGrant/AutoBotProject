@@ -21,9 +21,9 @@ from sensor import (
 from move import (
     move_forward,
     turn,
-    x_goal,
-    y_goal,
-    theta_goal,
+    get_x_goal,
+    get_y_goal,
+    get_theta_goal,
 )
 from odometry import get_pose_past, left_motor, right_motor
 from time import time
@@ -44,39 +44,38 @@ def get_distance_since_last_scan():
 
 
 def waypoint_follow():
-
     pose_past = get_pose_past()
     goals_reached = get_goals_reached()
-
+    theta_goal = get_theta_goal()
     # TODO: Make move_forward and turn interruptible
     if pose_past[2] - theta_goal[goals_reached] > 10 * pi / 180:
         turn_result = turn(left_motor, right_motor, theta_goal[goals_reached])
         if turn_result == -2:
             left_motor.stop()
             right_motor.stop()
-            return
+            return -3
     move_result = move_forward(
         left_motor,
         right_motor,
-        x_goal[goals_reached],
-        y_goal[goals_reached],
-        # y_goal[goals_reached],
-        theta_goal[goals_reached],
+        get_x_goal()[goals_reached],
+        get_y_goal()[goals_reached],
+        get_theta_goal()[goals_reached],
     )
     if move_result == -2:
         print("Obstacle Detected")
         left_motor.stop()
         right_motor.stop()
-        return
+        return -2
     if move_result == -1:
         left_motor.stop()
         right_motor.stop()
-        return
+        return -1
     if move_result == 0:
         print("Goal Reached")
         increment_goals_reached()
         left_motor.stop()
         right_motor.stop()
+        return 0
 
 
 def waypoint_follow_priority():
