@@ -82,7 +82,6 @@ def move_forward(left_motor, right_motor, x_goal, y_goal, theta_goal):
             (x_goal - get_pose_past()[0]) ** 2 + (y_goal - get_pose_past()[1]) ** 2
         )
 
-        print(get_pose_past())
         velocity_controller(
             left_motor,
             right_motor,

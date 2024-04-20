@@ -8,7 +8,7 @@ from odometry import BASE_WIDTH, get_pose_past
 
 # Velocity controller Gains
 K_RHO = 0.7
-K_ALPHA = 0.8
+K_ALPHA = 0.6
 K_BETA = -0.5
 
 # EV3 Parameters
@@ -44,7 +44,7 @@ def velocity_controller(
             omega = ev3_math.clamp(omega, 3 / BASE_WIDTH, 8 / BASE_WIDTH)
     else:
         velo = ev3_math.clamp(velo, 7, 12)
-        omega = ev3_math.clamp(omega, -8 / BASE_WIDTH, 8 / BASE_WIDTH)
+        omega = ev3_math.clamp(omega, -5 / BASE_WIDTH, 5 / BASE_WIDTH)
 
     # if alpha > abs(pi/2):
     #     velo = 0

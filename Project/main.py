@@ -11,7 +11,12 @@ from detect import (
     get_avoidance_in_progress,
     set_avoidance_in_progress,
 )
-from avoid import follow_wall, get_goals_reached, increment_goals_reached
+from avoid import (
+    follow_wall,
+    get_goals_reached,
+    increment_goals_reached,
+    set_wall_following_direction,
+)
 from sensor import (
     reset_servo,
     cardinal_direction_sensor_scan,
@@ -111,6 +116,7 @@ def obstacle_avoid():
     # Wall follow in that direction
     if follow_wall("L"):
         set_avoidance_in_progress(False)
+        set_wall_following_direction(None)
 
 
 def obstacle_avoid_priority():

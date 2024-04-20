@@ -37,7 +37,7 @@ def set_avoidance_in_progress(value):
 
 avoidance_servo_mutex = threading.Lock()
 
-OBJECT_DETECTION_DISTANCE = 20
+OBJECT_DETECTION_DISTANCE = 5
 
 
 def reset_avoidance_servo():
