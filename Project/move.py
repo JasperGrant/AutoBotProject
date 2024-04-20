@@ -60,6 +60,7 @@ def turn(left_motor, right_motor, theta_goal):
     pose_past = get_pose_past()
 
     while abs(get_pose_past()[2] - theta_goal) > (NUM_DEGREES_FOR_EQUALITY):
+        print(get_pose_past())
         velocity_controller(
             left_motor,
             right_motor,
@@ -68,9 +69,6 @@ def turn(left_motor, right_motor, theta_goal):
             theta_goal,
             is_turning=True,
         )
-        if get_avoidance_in_progress():
-            print("Object detected")
-            return -2
 
 
 def move_forward(left_motor, right_motor, x_goal, y_goal, theta_goal):
@@ -83,6 +81,8 @@ def move_forward(left_motor, right_motor, x_goal, y_goal, theta_goal):
         pre_dist = sqrt(
             (x_goal - get_pose_past()[0]) ** 2 + (y_goal - get_pose_past()[1]) ** 2
         )
+
+        print(get_pose_past())
         velocity_controller(
             left_motor,
             right_motor,

@@ -38,10 +38,13 @@ def velocity_controller(
 
     if is_turning:
         velo = 0
-        omega = ev3_math.clamp(omega, 3 / BASE_WIDTH, 8 / BASE_WIDTH)
+        if omega < 0:
+            omega = ev3_math.clamp(omega, -8 / BASE_WIDTH, -3 / BASE_WIDTH)
+        else:
+            omega = ev3_math.clamp(omega, 3 / BASE_WIDTH, 8 / BASE_WIDTH)
     else:
         velo = ev3_math.clamp(velo, 7, 12)
-        omega = ev3_math.clamp(omega, 0, 15 / BASE_WIDTH)
+        omega = ev3_math.clamp(omega, -8 / BASE_WIDTH, 8 / BASE_WIDTH)
 
     # if alpha > abs(pi/2):
     #     velo = 0

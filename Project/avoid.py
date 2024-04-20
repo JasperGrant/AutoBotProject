@@ -5,7 +5,7 @@
 # 2024-04-13
 
 from math import degrees, pi, atan2, cos, sin
-from time import time
+from time import time, sleep
 
 from EV3_math_modules import clamp
 from detect import (
@@ -15,7 +15,7 @@ from detect import (
     AVOIDANCE_SERVO_RIGHT_MAX,
     AVOIDANCE_SERVO_LEFT_MAX,
 )
-from move import get_x_goal, get_y_goal
+from move import get_x_goal, get_y_goal, turn, move_forward
 
 from odometry import get_pose_past, left_motor, right_motor
 
@@ -24,7 +24,7 @@ MOTOR_HIGH = 10
 MOTOR_LOW = 5
 k = 0.1
 
-WALL_DISTANCE = 20
+WALL_DISTANCE = 40
 
 goals_reached = 0
 
@@ -66,55 +66,93 @@ def follow_wall(direction="L"):
     print(time())
     # Read survey angle
     print("Following wall")
-    move_avoidance_servo_to_angle(-90)
-    survey_angle_reading = avoidance_ultrasonic_sensor.distance_centimeters
-
-    error = clamp(WALL_DISTANCE - survey_angle_reading, -1000, 40)
-
-    print("Error: ", error)
-
-    motor_input_change = k * error
-
-    # Read in front
-    move_avoidance_servo_to_angle(0)
-    wall_in_front = avoidance_ultrasonic_sensor.distance_centimeters < WALL_DISTANCE
-
-    # Set motor speeds
-    motor_speeds = (
-        MOTOR_BASE_SPEED - motor_input_change,
-        MOTOR_BASE_SPEED + motor_input_change,
-    )
-    # Handle wall in front
-    if wall_in_front:
-        motor_speeds = (-MOTOR_LOW, MOTOR_LOW)
-    left_motor.on(speed=motor_speeds[0])
-    right_motor.on(speed=motor_speeds[1])
 
     pose_past = get_pose_past()
-    goals_reached = get_goals_reached()
 
-    check_distance_to_goal(pose_past, goals_reached)
-    # If goal angle is withing front servo range
-    # Turn to goal angle, check if blocked
-    # Else return False
-    goal_angle = get_goal_angle(pose_past, goals_reached)
-    print("Goal angle: ", goal_angle)
-    print("Pose: ", degrees(pose_past[2]))
+    count_left = 0
+    count_right = 0
 
-    if (
-        AVOIDANCE_SERVO_LEFT_MAX + 20 <= goal_angle
-        and goal_angle <= AVOIDANCE_SERVO_RIGHT_MAX - 20
-    ):
-        detected = False
-        for i in range(int(goal_angle) - 15, int(goal_angle) + 15, 10):
-            print("Checking angle: ", i)
-            move_avoidance_servo_to_angle(i)
-            if is_object_detected():
-                detected = True
-        # for i in range(90, -90, -30):
-        #     move_avoidance_servo_to_angle(i)
-        #     if is_object_detected():
-        #         detected = True
-        return not detected
+    sleep(2)
+
+    for i in range(90, 0, -10):
+        move_avoidance_servo_to_angle(i)
+        if is_object_detected():
+            count_left += 1
+    for i in range(0, -90, -10):
+        move_avoidance_servo_to_angle(i)
+        if is_object_detected():
+            count_right += 1
+
+    direction = "R" if count_left > count_right else "L"
+
+    print("Direction: ", direction)
+
+    if direction == "L":
+        print("Turning left")
+        goal = pose_past[2] + pi / 2
+        turn(left_motor, right_motor, goal)
+        print("done turning left")
+    else:
+        print("Turning right")
+        turn(left_motor, right_motor, pose_past[2] - pi / 2)
+        print("done turning right")
+
+    while True:
+        move_avoidance_servo_to_angle(-90 if direction == "L" else 90)
+
+        survey_angle_reading = avoidance_ultrasonic_sensor.distance_centimeters
+
+        error = clamp(WALL_DISTANCE - survey_angle_reading, -30, 30)
+
+        # print("Error: ", error)
+
+        motor_input_change = k * error
+
+        # Read in front
+        move_avoidance_servo_to_angle(0)
+        wall_in_front = avoidance_ultrasonic_sensor.distance_centimeters < WALL_DISTANCE
+
+        if direction == "R":
+            motor_input_change = -motor_input_change
+
+        # Set motor speeds
+        motor_speeds = (
+            MOTOR_BASE_SPEED - motor_input_change,
+            MOTOR_BASE_SPEED + motor_input_change,
+        )
+        # Handle wall in front
+        if wall_in_front:
+            motor_speeds = (
+                (-MOTOR_LOW, MOTOR_LOW) if direction == "L" else (MOTOR_LOW, -MOTOR_LOW)
+            )
+        left_motor.on(speed=motor_speeds[0])
+        right_motor.on(speed=motor_speeds[1])
+
+    # pose_past = get_pose_past()
+    # goals_reached = get_goals_reached()
+
+    # check_distance_to_goal(pose_past, goals_reached)
+    # # If goal angle is withing front servo range
+    # # Turn to goal angle, check if blocked
+    # # Else return False
+    # goal_angle = get_goal_angle(pose_past, goals_reached)
+    # print("Goal angle: ", goal_angle)
+    # print("Pose: ", degrees(pose_past[2]))
+
+    # if (
+    #     AVOIDANCE_SERVO_LEFT_MAX + 20 <= goal_angle
+    #     and goal_angle <= AVOIDANCE_SERVO_RIGHT_MAX - 20
+    # ):
+    #     detected = False
+    #     for i in range(int(goal_angle) - 15, int(goal_angle) + 15, 10):
+    #         print("Checking angle: ", i)
+    #         move_avoidance_servo_to_angle(i)
+    #         if is_object_detected():
+    #             detected = True
+    #     # for i in range(90, -90, -30):
+    #     #     move_avoidance_servo_to_angle(i)
+    #     #     if is_object_detected():
+    #     #         detected = True
+    #     return not detected
 
     return False
