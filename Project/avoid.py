@@ -4,7 +4,7 @@
 # Written by Jasper Grant and Michael MacGillivray
 # 2024-04-13
 
-from math import degrees, pi, atan2, cos, sin
+from math import degrees, pi, atan2, cos, sin, sqrt
 from time import time, sleep
 
 from EV3_math_modules import clamp
@@ -59,6 +59,13 @@ def get_goal_angle(pose_past, goals_reached):
     ) - degrees(pose_past[2])
 
 
+def get_goal_distance(point, goals_reached):
+    return sqrt(
+        (get_y_goal()[goals_reached] - point) ** 2
+        + (get_x_goal()[goals_reached] - point) ** 2
+    )
+
+
 def check_distance_to_goal(pose_past, goals_reached):
     # if goals_reached > 16:
     #     return 0
@@ -87,16 +94,26 @@ def follow_wall(direction="L"):
 
         sleep(5)
 
+        # Transformation matrix here
+        L_min = float("inf")
+        R_min = float("inf")
+
         for i in range(90, 0, -10):
             move_avoidance_servo_to_angle(i)
-            if is_object_detected():
-                count_left += 1
+            point = avoidance_ultrasonic_sensor.distance_centimeters * cos(
+                i + pose_past[2]
+            ), avoidance_ultrasonic_sensor.distance_centimeters * sin(i + pose_past[2])
+            if get_goal_distance(point, goals_reached):
+                L_min = min(L_min, avoidance_ultrasonic_sensor.distance_centimeters)
         for i in range(0, -90, -10):
             move_avoidance_servo_to_angle(i)
-            if is_object_detected():
-                count_right += 1
+            point = avoidance_ultrasonic_sensor.distance_centimeters * cos(
+                i + pose_past[2]
+            ), avoidance_ultrasonic_sensor.distance_centimeters * sin(i + pose_past[2])
+            if get_goal_distance(point, goals_reached):
+                R_min = min(R_min, avoidance_ultrasonic_sensor.distance_centimeters)
 
-        direction = "R" if count_left > count_right else "L"
+        direction = "L" if L_min < R_min else "R"
 
         print("Direction: ", direction)
 
