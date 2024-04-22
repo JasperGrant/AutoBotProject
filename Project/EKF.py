@@ -5,7 +5,7 @@
 # 2024-04-05
 
 from math import pi, sin, cos, atan2, sqrt
-import EV3_math_modules as ev3_math
+import LinearAlgebraPurePython as la
 from time import sleep, time
 
 
@@ -26,10 +26,10 @@ def propagate_state_covariance(
     ]
 
     # Calculate the predicted state covariance
-    pred_covariance = ev3_math.matrix_addition(
-        ev3_math.matrix_multiplication(
-            ev3_math.matrix_multiplication(G, state_covariance),
-            ev3_math.matrix_transpose(G),
+    pred_covariance = la.matrix_addition(
+        la.matrix_multiply(
+            la.matrix_multiply(G, state_covariance),
+            la.matrix_multiply(G),
         ),
         Q,
     )
@@ -45,16 +45,17 @@ def update_state(landmark, pred_covariance, state):
     H = [[1, 0, 0], [0, 1, 0]]
 
     # Calculate the Kalman gain
-    K = ev3_math.matrix_multiplication(
-        ev3_math.matrix_multiplication(pred_covariance, ev3_math.matrix_transpose(H)),
-        ev3_math.matrix_inversion(
-            ev3_math.matrix_addition(
-                ev3_math.matrix_multiplication(
-                    ev3_math.matrix_multiplication(H, pred_covariance),
-                    ev3_math.matrix_transpose(H),
+    K = la.matrix_multiply(
+        la.matrix_multiply(pred_covariance, la.matrix_multiply(H)),
+        la.invert_matrix(
+            la.matrix_addition(
+                la.matrix_multiply(
+                    la.matrix_multiply(H, pred_covariance),
+                    la.transpose(H),
                 ),
                 R,
-            )
+            ),
+            1,
         ),
     )
 
@@ -62,15 +63,13 @@ def update_state(landmark, pred_covariance, state):
     z = [[landmark[0] - state[0]], [landmark[1] - state[1]]]
 
     # Update the state
-    state = ev3_math.matrix_addition(state, ev3_math.matrix_multiplication(K, z))
+    state = la.matrix_addition(state, la.matrix_multiply(K, z))
 
     # Update the state covariance
-    state_covariance = ev3_math.matrix_multiplication(
-        ev3_math.matrix_addition(
+    state_covariance = la.matrix_multiply(
+        la.matrix_addition(
             [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
-            ev3_math.matrix_multiplication(
-                ev3_math.matrix_multiplication(-K, H), state
-            ),
+            la.matrix_multiply(la.matrix_multiply(-K, H), state),
         ),
         pred_covariance,
     )
