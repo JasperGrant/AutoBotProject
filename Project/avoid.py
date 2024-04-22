@@ -103,15 +103,13 @@ def follow_wall(direction="L"):
             point = avoidance_ultrasonic_sensor.distance_centimeters * cos(
                 i + pose_past[2]
             ), avoidance_ultrasonic_sensor.distance_centimeters * sin(i + pose_past[2])
-            if get_goal_distance(point, goals_reached):
-                L_min = min(L_min, avoidance_ultrasonic_sensor.distance_centimeters)
+            L_min = min(L_min, get_goal_distance(point, goals_reached))
         for i in range(0, -90, -10):
             move_avoidance_servo_to_angle(i)
             point = avoidance_ultrasonic_sensor.distance_centimeters * cos(
                 i + pose_past[2]
             ), avoidance_ultrasonic_sensor.distance_centimeters * sin(i + pose_past[2])
-            if get_goal_distance(point, goals_reached):
-                R_min = min(R_min, avoidance_ultrasonic_sensor.distance_centimeters)
+            R_min = min(R_min, get_goal_distance(point, goals_reached))
 
         direction = "L" if L_min < R_min else "R"
 
