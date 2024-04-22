@@ -31,7 +31,7 @@ from move import (
     get_theta_goal,
 )
 from odometry import get_pose_past, left_motor, right_motor
-from time import time
+from time import time, sleep
 
 button = Button()
 
@@ -115,6 +115,11 @@ def obstacle_avoid():
     # Decide which direction to go
     # Wall follow in that direction
     if follow_wall("L"):
+        left_motor.on(speed=5)
+        right_motor.on(speed=5)
+        sleep(1)
+        left_motor.stop()
+        right_motor.stop()
         set_avoidance_in_progress(False)
         set_wall_following_direction(None)
 
