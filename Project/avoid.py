@@ -6,10 +6,9 @@
 
 from math import degrees, pi, atan2, cos, sin, sqrt
 from time import time, sleep
-
-from EV3_math_modules import clamp
+from EV3_math_modules import clamp, circle_minus
 from detect import (
-    avoidance_ultrasonic_sensor,
+    get_avoidance_ultrasonic_distance,
     is_object_detected,
     move_avoidance_servo_to_angle,
     AVOIDANCE_SERVO_RIGHT_MAX,
@@ -17,7 +16,7 @@ from detect import (
 )
 from move import get_x_goal, get_y_goal, turn, get_goal_directions
 
-from odometry import get_pose_past, left_motor, right_motor
+from odometry import get_pose_past, left_motor, right_motor, BASE_WIDTH
 
 MOTOR_BASE_SPEED = 8
 MOTOR_HIGH = 10
@@ -28,6 +27,12 @@ k_i = 0.1
 k_d = 0.1
 
 WALL_DISTANCE = 15
+
+FRONT_SENSOR_LIMIT = 50
+
+CLEAR_PATH_LIMIT = 25
+
+AVOIDANCE_SERVO_OFFSET = 10
 
 goals_reached = 0
 
@@ -58,11 +63,14 @@ def increment_goals_reached():
 
 def get_goal_angle(pose_past, goals_reached):
     return degrees(
-        atan2(
-            get_y_goal()[goals_reached] - pose_past[1],
-            get_x_goal()[goals_reached] - pose_past[0],
+        circle_minus(
+            atan2(
+                get_y_goal()[goals_reached] - pose_past[1],
+                get_x_goal()[goals_reached] - pose_past[0],
+            )
+            - pose_past[2]
         )
-    ) - degrees(pose_past[2])
+    )
 
 
 def get_goal_distance(point, goals_reached):
@@ -73,17 +81,18 @@ def get_goal_distance(point, goals_reached):
 
 
 def check_distance_to_goal(pose_past, goals_reached):
-    if get_goal_directions(goals_reached) == "U":
+    if get_goal_directions()[goals_reached] == "U":
         if pose_past[1] >= get_y_goal()[goals_reached]:
             increment_goals_reached()
-    elif get_goal_directions(goals_reached) == "D":
+    elif get_goal_directions()[goals_reached] == "D":
         if pose_past[1] <= get_y_goal()[goals_reached]:
             increment_goals_reached()
-    elif get_goal_directions(goals_reached) == "R":
+    elif get_goal_directions()[goals_reached] == "R":
         if pose_past[0] >= get_x_goal()[goals_reached]:
             increment_goals_reached()
     else:
         print("Error: Invalid goal direction")
+    pass
 
 
 def follow_wall(direction="L"):
@@ -105,20 +114,38 @@ def follow_wall(direction="L"):
 
         for i in range(90, 0, -10):
             move_avoidance_servo_to_angle(i)
+            distance = clamp(
+                get_avoidance_ultrasonic_distance(),
+                0,
+                get_goal_distance(
+                    (get_pose_past()[0], get_pose_past()[1]), goals_reached
+                ),
+            )
             point = (
-                avoidance_ultrasonic_sensor.distance_centimeters
-                * cos(i + pose_past[2]),
-                avoidance_ultrasonic_sensor.distance_centimeters
-                * sin(i + pose_past[2]),
+                distance * cos(i + pose_past[2])
+                + pose_past[0]
+                + cos(pose_past[2]) * AVOIDANCE_SERVO_OFFSET,
+                distance * sin(i + pose_past[2])
+                + pose_past[1]
+                + sin(pose_past[2]) * AVOIDANCE_SERVO_OFFSET,
             )
             L_min = min(L_min, get_goal_distance(point, goals_reached))
         for i in range(0, -90, -10):
             move_avoidance_servo_to_angle(i)
+            distance = clamp(
+                get_avoidance_ultrasonic_distance(),
+                0,
+                get_goal_distance(
+                    (get_pose_past()[0], get_pose_past()[1]), goals_reached
+                ),
+            )
             point = (
-                avoidance_ultrasonic_sensor.distance_centimeters
-                * cos(i + pose_past[2]),
-                avoidance_ultrasonic_sensor.distance_centimeters
-                * sin(i + pose_past[2]),
+                distance * cos(i + pose_past[2])
+                + pose_past[0]
+                + cos(pose_past[2]) * AVOIDANCE_SERVO_OFFSET,
+                distance * sin(i + pose_past[2])
+                + pose_past[1]
+                + sin(pose_past[2]) * AVOIDANCE_SERVO_OFFSET,
             )
             R_min = min(R_min, get_goal_distance(point, goals_reached))
 
@@ -128,12 +155,12 @@ def follow_wall(direction="L"):
 
         if direction == "L":
             print("Turning left")
-            goal = pose_past[2] + pi / 4
-            turn(left_motor, right_motor, goal)
+            goal = pose_past[2] + pi / 2
+            turn(left_motor, right_motor, circle_minus(goal))
             print("done turning left")
         else:
             print("Turning right")
-            turn(left_motor, right_motor, pose_past[2] - pi / 4)
+            turn(left_motor, right_motor, circle_minus(pose_past[2] - pi / 2))
             print("done turning right")
 
         set_wall_following_direction(direction)
@@ -144,9 +171,9 @@ def follow_wall(direction="L"):
 
     move_avoidance_servo_to_angle(-90 if direction == "L" else 90)
 
-    survey_angle_reading = avoidance_ultrasonic_sensor.distance_centimeters
+    survey_angle_reading = get_avoidance_ultrasonic_distance() - BASE_WIDTH / 2
 
-    error = clamp(WALL_DISTANCE - survey_angle_reading, -30, 30)
+    error = clamp(WALL_DISTANCE - survey_angle_reading, -25, 25)
 
     global prev_error
     dervaitive_error = error - prev_error
@@ -164,7 +191,7 @@ def follow_wall(direction="L"):
 
     # Read in front
     move_avoidance_servo_to_angle(0)
-    wall_in_front = avoidance_ultrasonic_sensor.distance_centimeters < WALL_DISTANCE
+    wall_in_front = get_avoidance_ultrasonic_distance() < WALL_DISTANCE
 
     if direction == "R":
         motor_input_change = -motor_input_change
@@ -193,16 +220,29 @@ def follow_wall(direction="L"):
     print("Goal angle: ", goal_angle)
     print("Pose: ", degrees(pose_past[2]))
 
+    # Wrong direction case
+    if goal_angle > 135 or goal_angle < -135:
+        # Flip 180 degrees
+        turn(left_motor, right_motor, circle_minus(pose_past[2] + pi))
+        set_wall_following_direction("L" if direction == "R" else "R")
+        return False
+
     if (
         AVOIDANCE_SERVO_LEFT_MAX + 45 <= goal_angle
         and goal_angle <= AVOIDANCE_SERVO_RIGHT_MAX - 45
     ):
+        if (goal_angle < 0 and direction == "L") or (
+            goal_angle > 0 and direction == "R"
+        ):
+            move_avoidance_servo_to_angle(-90 if direction == "L" else 90)
+            if is_object_detected():
+                return False
         print("Checking for object")
         detected = False
         for i in range(int(goal_angle) - 15, int(goal_angle) + 15, 10):
             print("Checking angle: ", i)
             move_avoidance_servo_to_angle(i)
-            if is_object_detected():
+            if is_object_detected(CLEAR_PATH_LIMIT):
                 detected = True
         # for i in range(90, -90, -30):
         #     move_avoidance_servo_to_angle(i)

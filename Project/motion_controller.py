@@ -8,10 +8,10 @@ from odometry import BASE_WIDTH, get_pose_past
 
 # Velocity controller Gains
 K_RHO = 0.7
-K_ALPHA = 0.4
-K_BETA = -0.3
+K_ALPHA = 0.6
+K_BETA = -0.5
 
-# EV3 Parameters
+# EV3 Parameterss
 BASE_WIDTH = 13  # cm
 
 

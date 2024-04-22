@@ -53,7 +53,7 @@ def waypoint_follow():
     goals_reached = get_goals_reached()
     theta_goal = get_theta_goal()
     # TODO: Make move_forward and turn interruptible
-    if pose_past[2] - theta_goal[goals_reached] > 10 * pi / 180:
+    if abs(pose_past[2] - theta_goal[goals_reached]) > 10 * pi / 180:
         turn_result = turn(left_motor, right_motor, theta_goal[goals_reached])
         if turn_result == -2:
             left_motor.stop()

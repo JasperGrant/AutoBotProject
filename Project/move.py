@@ -53,19 +53,15 @@ def get_theta_goal():
 button = Button()
 
 # thresholds for setpoint tracker
-NUM_DEGREES_FOR_EQUALITY = 3 * pi / 180
+RADS_FOR_EQUALITY = 5 * pi / 180
 DISTANCE_FOR_EQUALITY = 5
 WRONG_DIRECTION_LIMIT = 5
-
-# Inital test conditons for waypoints. Will be updated to be dynamic
-DEPTH_GOAL = 20
-WIDTH_GOAL = 100
 
 
 def turn(left_motor, right_motor, theta_goal):
     pose_past = get_pose_past()
 
-    while abs(get_pose_past()[2] - theta_goal) > (NUM_DEGREES_FOR_EQUALITY):
+    while abs(get_pose_past()[2] - theta_goal) > (RADS_FOR_EQUALITY):
         print(get_pose_past())
         velocity_controller(
             left_motor,

@@ -18,6 +18,7 @@ from ev3dev2.motor import (
 
 AVOIDANCE_SERVO_LEFT_MAX = -90
 AVOIDANCE_SERVO_RIGHT_MAX = 90
+AVOIDANCE_ULTRASONIC_SENSOR_OFSET = 3.5
 
 
 avoidance_servo = MediumMotor(OUTPUT_B)
@@ -37,15 +38,22 @@ def set_avoidance_in_progress(value):
 
 avoidance_servo_mutex = threading.Lock()
 
-OBJECT_DETECTION_DISTANCE = 15
+OBJECT_DETECTION_DISTANCE = 10
 
 
 def reset_avoidance_servo():
     avoidance_servo.reset()
 
 
-def is_object_detected():
-    return avoidance_ultrasonic_sensor.distance_centimeters < OBJECT_DETECTION_DISTANCE
+def get_avoidance_ultrasonic_distance():
+    return (
+        avoidance_ultrasonic_sensor.distance_centimeters
+        - AVOIDANCE_ULTRASONIC_SENSOR_OFSET
+    )
+
+
+def is_object_detected(range=OBJECT_DETECTION_DISTANCE):
+    return get_avoidance_ultrasonic_distance() < range
 
 
 def move_avoidance_servo_to_angle(angle, speed=10):
