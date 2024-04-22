@@ -15,7 +15,7 @@ from detect import (
     AVOIDANCE_SERVO_RIGHT_MAX,
     AVOIDANCE_SERVO_LEFT_MAX,
 )
-from move import get_x_goal, get_y_goal, turn, move_forward
+from move import get_x_goal, get_y_goal, turn, get_goal_directions
 
 from odometry import get_pose_past, left_motor, right_motor
 
@@ -67,18 +67,17 @@ def get_goal_distance(point, goals_reached):
 
 
 def check_distance_to_goal(pose_past, goals_reached):
-    # if goals_reached > 16:
-    #     return 0
-    # elif goals_reached <= 5:
-    #     if pose_past[1] > get_y_goal()[goals_reached]:
-    #         return increment_goals_reached()
-    # elif goals_reached <= 10:
-    #     if pose_past[0] > get_x_goal()[goals_reached]:
-    #         return increment_goals_reached()
-    # else:
-    #     if pose_past[1] < get_y_goal()[goals_reached]:
-    #         return increment_goals_reached()
-    pass
+    if get_goal_directions(goals_reached) == "U":
+        if pose_past[1] >= get_y_goal()[goals_reached]:
+            increment_goals_reached()
+    elif get_goal_directions(goals_reached) == "D":
+        if pose_past[1] <= get_y_goal()[goals_reached]:
+            increment_goals_reached()
+    elif get_goal_directions(goals_reached) == "R":
+        if pose_past[0] >= get_x_goal()[goals_reached]:
+            increment_goals_reached()
+    else:
+        print("Error: Invalid goal direction")
 
 
 def follow_wall(direction="L"):

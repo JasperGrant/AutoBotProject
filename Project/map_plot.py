@@ -26,12 +26,12 @@ def get_vertical_line(points, line, resolution=1):
         limit = 0
     else:
         limit = SIX_FEET
-    # If selected point is too far from nearest neighbour, remove it
-    while abs(line_location - limit) > NEAREST_NEIGHBOUR_LIMIT:
-        line_locations.pop()
-        if line_locations == []:
-            return [(-50, -50), (-50, -50)]
-        line_location = line_locations[-1]
+    # # If selected point is too far from nearest neighbour, remove it
+    # while abs(line_location - limit) > NEAREST_NEIGHBOUR_LIMIT:
+    #     line_locations.pop()
+    #     if line_locations == []:
+    #         return [(-50, -50), (-50, -50)]
+    #     line_location = line_locations[-1]
     # Return final line candidate as two points
     return [
         (line_location + resolution / 2, 0),
@@ -51,12 +51,12 @@ def get_horizontal_line(points, line, resolution=1):
         limit = SIX_FEET
     else:
         limit = 0
-    # If selected point is too far from nearest neighbour, remove it
-    while abs(line_location - limit) > NEAREST_NEIGHBOUR_LIMIT:
-        line_locations.pop()
-        if line_locations == []:
-            return [(-50, -50), (-50, -50)]
-        line_location = line_locations[-1]
+    # # If selected point is too far from nearest neighbour, remove it
+    # while abs(line_location - limit) > NEAREST_NEIGHBOUR_LIMIT:
+    #     line_locations.pop()
+    #     if line_locations == []:
+    #         return [(-50, -50), (-50, -50)]
+    #     line_location = line_locations[-1]
     # Return final line candidate as two points
     return [
         (0, line_location + resolution / 2),

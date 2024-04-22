@@ -15,20 +15,26 @@ def get_goals():
     # Load waypoints from file
     goals_file = open("goals.csv", "r")
     # Set goal lists
+    goal_directions = []
     x_goal = []
     y_goal = []
     theta_goal = []
     # Load goals into lists
     for line in goals_file:
         if line != "":
-            x, y, theta = line.split(",")
+            direction, x, y, theta = line.split(",")
+            goal_directions.append(direction)
             x_goal.append(float(x))
             y_goal.append(float(y))
             theta_goal.append(float(theta))
-    return x_goal, y_goal, theta_goal
+    return goal_directions, x_goal, y_goal, theta_goal
 
 
-x_goal, y_goal, theta_goal = get_goals()
+goal_directions, x_goal, y_goal, theta_goal = get_goals()
+
+
+def get_goal_directions():
+    return goal_directions
 
 
 def get_x_goal():
