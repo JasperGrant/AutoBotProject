@@ -71,12 +71,7 @@ def get_wheel_velocity(left_motor, right_motor, TIME):
     set_pose_past([x_current, y_current, ev3_math.circle_minus(theta_current)])
 
     if velo != 0:
-        pred_covariave = propagate_state_covariance(
-            velo, delta_t, theta_current, get_pred_covariance()
-        )
-
-        print("Predicted Covariance: ", pred_covariave)
-        set_pred_covariance(pred_covariave)
+        propagate_state_covariance(velo, delta_t, theta_current, get_pred_covariance())
 
 
 def update_pose():

@@ -31,7 +31,7 @@ from move import (
     get_y_goal,
     get_theta_goal,
 )
-from odometry import get_pose_past, left_motor, right_motor
+from odometry import get_pose_past, set_pose_past, left_motor, right_motor
 from EKF import update_state, get_pred_covariance
 
 
@@ -98,7 +98,8 @@ def scan():
     # Update POSE If Applicable
     if True:
         # Update the pose,
-        update_state([0, 0], get_pred_covariance(), [0, 0])
+        state = update_state([0, 170], get_pred_covariance(), [0, 180], get_pose_past())
+        set_pose_past(state)
 
     global time_since_last_scan
     time_since_last_scan = time()
@@ -122,6 +123,7 @@ def obstacle_avoid():
     # Fully scan object
     # Decide which direction to go
     # Wall follow in that direction
+
     if follow_wall("L"):
         left_motor.on(speed=5)
         right_motor.on(speed=5)
