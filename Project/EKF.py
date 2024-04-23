@@ -8,6 +8,17 @@ from math import pi, sin, cos, atan2, sqrt
 import LinearAlgebraPurePython as la
 from time import sleep, time
 
+pred_covariance = [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]
+
+
+def set_pred_covariance(new_covariance):
+    global pred_covariance
+    pred_covariance = new_covariance
+
+
+def get_pred_covariance():
+    return pred_covariance
+
 
 # called from motor_control.py
 # Updateing covariavce between scans, stae is updated in the motor control code.
@@ -20,8 +31,8 @@ def propagate_state_covariance(
 
     # Calculate the Jacobian of the state transition matrix
     G = [
-        [1, 0, -velocitiy * sin(state[2]) * time],
-        [0, 1, velocitiy * cos(state[2]) * time],
+        [1, 0, -velocitiy * sin(state) * time],
+        [0, 1, velocitiy * cos(state) * time],
         [0, 0, 1],
     ]
 
@@ -29,7 +40,7 @@ def propagate_state_covariance(
     pred_covariance = la.matrix_addition(
         la.matrix_multiply(
             la.matrix_multiply(G, state_covariance),
-            la.matrix_multiply(G),
+            la.transpose(G),
         ),
         Q,
     )
@@ -46,7 +57,7 @@ def update_state(landmark, pred_covariance, state):
 
     # Calculate the Kalman gain
     K = la.matrix_multiply(
-        la.matrix_multiply(pred_covariance, la.matrix_multiply(H)),
+        la.matrix_multiply(pred_covariance, la.transpose(H)),
         la.invert_matrix(
             la.matrix_addition(
                 la.matrix_multiply(

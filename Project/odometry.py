@@ -12,23 +12,13 @@ from ev3dev2.motor import (
     OUTPUT_D,
 )
 
+from EKF import propagate_state_covariance, set_pred_covariance, get_pred_covariance
+
 # Set up robot as tank along with sensors
 left_motor = LargeMotor(OUTPUT_D)
 right_motor = LargeMotor(OUTPUT_A)
 
 # Assuming we are on a line to start
-# Number of readings for the robot to think it is going in the wrong direction
-WRONG_DIRECTION_LIMIT = 10
-
-
-NUM_DEGREES_FOR_EQUALITY = 3 * pi / 180
-DISTANCE_FOR_EQUALITY = 2
-
-# Velocity controller Gains
-K_RHO = 0.7
-K_ALPHA = 0.8
-K_BETA = -0.5
-
 # EV3 Parameters
 BASE_WIDTH = 13  # cm
 TIRE_DIAMETER = 5.8  # cm
@@ -69,8 +59,9 @@ def get_wheel_velocity(left_motor, right_motor, TIME):
     right_velocity = right_distance / delta_t
 
     # Calc linear and angular velocity
-    x_dot = cos(pose_past[2]) * ((left_velocity + right_velocity) / 2)
-    y_dot = sin(pose_past[2]) * ((left_velocity + right_velocity) / 2)
+    velo = (left_velocity + right_velocity) / 2
+    x_dot = cos(pose_past[2]) * velo
+    y_dot = sin(pose_past[2]) * velo
     omega = (right_velocity - left_velocity) / BASE_WIDTH
 
     theta_current = pose_past[2] + omega * delta_t
@@ -78,6 +69,14 @@ def get_wheel_velocity(left_motor, right_motor, TIME):
     y_current = pose_past[1] + y_dot * delta_t
 
     set_pose_past([x_current, y_current, ev3_math.circle_minus(theta_current)])
+
+    if velo != 0:
+        pred_covariave = propagate_state_covariance(
+            velo, delta_t, theta_current, get_pred_covariance()
+        )
+
+        print("Predicted Covariance: ", pred_covariave)
+        set_pred_covariance(pred_covariave)
 
 
 def update_pose():
