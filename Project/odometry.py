@@ -33,6 +33,7 @@ def get_pose_past():
 
 def set_pose_past(new_pose):
     global pose_past
+    print(new_pose)
     pose_past = new_pose
 
 
@@ -67,7 +68,6 @@ def get_wheel_velocity(left_motor, right_motor, TIME):
     theta_current = pose_past[2] + omega * delta_t
     x_current = pose_past[0] + x_dot * delta_t
     y_current = pose_past[1] + y_dot * delta_t
-
     set_pose_past([x_current, y_current, ev3_math.circle_minus(theta_current)])
 
     if velo != 0:

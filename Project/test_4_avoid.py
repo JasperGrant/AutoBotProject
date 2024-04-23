@@ -28,7 +28,7 @@ def test_get_goal_angle(pose_past, goals_reached, expected, mocker):
         "move.get_y_goal",
         return_value=[1, 0, 1, 1, 0, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     )
-    from avoid import get_goal_angle
+    from goals import get_goal_angle
 
     assert get_goal_angle(pose_past, goals_reached) == expected
 
@@ -52,6 +52,6 @@ def test_check_distance_to_goal(pose_past, goals_reached, expected, mocker):
     mocker.patch("ev3dev2.button.Button")
     mocker.patch("threading.Thread.start")
     mocker.patch("builtins.open")
-    from avoid import check_distance_to_goal
+    from goals import check_distance_to_goal
 
     assert check_distance_to_goal(pose_past, goals_reached) == expected

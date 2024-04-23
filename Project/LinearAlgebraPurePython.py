@@ -65,7 +65,6 @@ def determinant(A, total=0):
 
 def check_non_singular(A):
     det = determinant(A)
-    print(det)
     if det != 0:
         return det
     else:
@@ -216,10 +215,8 @@ def invert_matrix(A, tol=None):
 
     # Section 2: Make copies of A & I, AM & IM, to use for row operations
     n = len(A)
-    print(n)
     AM = copy_matrix(A)
     I = identity_matrix(n)
-    print(len(I))
     IM = copy_matrix(I)
 
     # Section 3: Perform row operations

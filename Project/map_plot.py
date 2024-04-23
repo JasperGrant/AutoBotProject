@@ -83,7 +83,7 @@ points = [point.split(",") for point in map_file.split("\n") if point]
 # Change points into four groups by value of first char
 group_of_points = [
     [[point[1], point[2]] for point in points if point[0] == direction]
-    for direction in "RULDC"
+    for direction in "RULDCF"
 ]
 
 predicted_walls = wall_identification(group_of_points)
@@ -107,6 +107,8 @@ for point in group_of_points[3]:
     plt.scatter(float(point[0]), float(point[1]), color="pink")
 for point in group_of_points[4]:
     plt.scatter(float(point[0]), float(point[1]), color="purple")
+for point in group_of_points[5]:
+    plt.scatter(float(point[0]), float(point[1]), color="blue")
 
 for wall in predicted_walls:
     plt.plot([point[0] for point in wall], [point[1] for point in wall], color="blue")

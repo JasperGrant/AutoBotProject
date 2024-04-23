@@ -14,9 +14,11 @@ from detect import (
 )
 from avoid import (
     follow_wall,
+    set_wall_following_direction,
+)
+from goals import (
     get_goals_reached,
     increment_goals_reached,
-    set_wall_following_direction,
 )
 from sensor import (
     reset_servo,
@@ -27,6 +29,8 @@ from sensor import (
 from move import (
     move_forward,
     turn,
+)
+from goals import (
     get_x_goal,
     get_y_goal,
     get_theta_goal,
@@ -38,11 +42,11 @@ from EKF import update_state, get_pred_covariance
 button = Button()
 
 WAYPOINT_FOLLOW_CONSTANT_PRIORITY = 6
-SCAN_SLOPE_PRIORITY = 0.2
+SCAN_SLOPE_PRIORITY = 0.4
 OBSTACLE_NOT_DETECTED_CONSTANT_PRIORITY = 2
 OBSTACLE_DETECTED_CONSTANT_PRIORITY = 7
 OBJECT_DETECTED_CONSTANT_SCAN_PRIORITY = 8
-OBSTACLE_DETECTED_SCAN_FREQUENCY = 100
+OBSTACLE_DETECTED_SCAN_FREQUENCY = 75
 
 
 def get_distance_since_last_scan():
@@ -53,10 +57,10 @@ def get_distance_since_last_scan():
 def waypoint_follow():
     pose_past = get_pose_past()
     goals_reached = get_goals_reached()
-    theta_goal = get_theta_goal()
+    theta_goal = get_theta_goal(goals_reached)
     # TODO: Make move_forward and turn interruptible
-    if abs(pose_past[2] - theta_goal[goals_reached]) > 10 * pi / 180:
-        turn_result = turn(left_motor, right_motor, theta_goal[goals_reached])
+    if abs(pose_past[2] - theta_goal) > 10 * pi / 180:
+        turn_result = turn(left_motor, right_motor, theta_goal)
         if turn_result == -2:
             left_motor.stop()
             right_motor.stop()
@@ -64,12 +68,11 @@ def waypoint_follow():
     move_result = move_forward(
         left_motor,
         right_motor,
-        get_x_goal()[goals_reached],
-        get_y_goal()[goals_reached],
-        get_theta_goal()[goals_reached],
+        get_x_goal(goals_reached),
+        get_y_goal(goals_reached),
+        theta_goal,
     )
     if move_result == -2:
-        print("Obstacle Detected")
         left_motor.stop()
         right_motor.stop()
         return -2
@@ -78,7 +81,6 @@ def waypoint_follow():
         right_motor.stop()
         return -1
     if move_result == 0:
-        print("Goal Reached")
         increment_goals_reached()
         left_motor.stop()
         right_motor.stop()
@@ -169,8 +171,6 @@ def arbitrator():
     behavior_file.close()
 
     while not button.any():
-        print("Calculating Priorities")
-        print("Object? ", get_avoidance_in_progress())
         priorities = [priority() for priority in priority_functions]
         behavior_file = open("behavior.csv", "a")
         behavior_file.write(

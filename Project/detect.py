@@ -19,6 +19,7 @@ from ev3dev2.motor import (
 AVOIDANCE_SERVO_LEFT_MAX = -90
 AVOIDANCE_SERVO_RIGHT_MAX = 90
 AVOIDANCE_ULTRASONIC_SENSOR_OFSET = 3.5
+SCANNING_ANGLE = 50
 
 
 avoidance_servo = MediumMotor(OUTPUT_B)
@@ -69,9 +70,9 @@ def front_sensor_continous_scan():
     reset_avoidance_servo()
     while True:
         if not get_avoidance_in_progress():
-            for i in range(-60, 60, 30):
+            for i in range(-SCANNING_ANGLE, SCANNING_ANGLE, int(SCANNING_ANGLE / 2)):
                 move_avoidance_servo_to_angle(i)
-            for i in range(60, -60, -30):
+            for i in range(SCANNING_ANGLE, -SCANNING_ANGLE, int(-SCANNING_ANGLE / 2)):
                 move_avoidance_servo_to_angle(i)
         else:
             sleep(1)

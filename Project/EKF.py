@@ -45,7 +45,6 @@ def propagate_state_covariance(
         Q,
     )
 
-    print("Predicted Covariance: ", pred_covariance)
     set_pred_covariance(pred_covariance)
 
 
@@ -89,11 +88,11 @@ def update_state(landmark, pred_covariance, landmark_guess, state):
     )
 
     set_pred_covariance(state_covariance)
-    print("State: ", state_update[0][0], state_update[0][1], state_update[0][2])
-    print(
-        "change in state: ",
-        state_update[0][0] - state[0],
-        state_update[0][1] - state[1],
-        state_update[0][2] - state[2],
-    )
+    # print("State: ", state_update[0][0], state_update[0][1], state_update[0][2])
+    # print(
+    #     "change in state: ",
+    #     state_update[0][0] - state[0],
+    #     state_update[0][1] - state[1],
+    #     state_update[0][2] - state[2],
+    # )
     return [state_update[0][0], state_update[0][1], state_update[0][2]]

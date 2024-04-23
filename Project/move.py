@@ -9,6 +9,7 @@ from ev3dev2.button import Button
 from motion_controller import velocity_controller
 from detect import get_avoidance_in_progress
 from odometry import get_pose_past
+from goals import get_goals_reached, check_give_up_on_goal
 
 
 def get_goals():
@@ -33,20 +34,20 @@ def get_goals():
 goal_directions, x_goal, y_goal, theta_goal = get_goals()
 
 
-def get_goal_directions():
-    return goal_directions
+def get_goal_directions(i):
+    return goal_directions[i]
 
 
-def get_x_goal():
-    return x_goal
+def get_x_goal(i):
+    return x_goal[i]
 
 
-def get_y_goal():
-    return y_goal
+def get_y_goal(i):
+    return y_goal[i]
 
 
-def get_theta_goal():
-    return theta_goal
+def get_theta_goal(i):
+    return theta_goal[i]
 
 
 # Set up buttons
@@ -97,10 +98,8 @@ def move_forward(left_motor, right_motor, x_goal, y_goal, theta_goal):
 
         if pre_dist < post_dist:
             wrong_direction_count += 1
-        if wrong_direction_count > WRONG_DIRECTION_LIMIT:
-            print("Goal given up on")
+        if check_give_up_on_goal(get_pose_past(), get_goals_reached()):
             return -1
         if get_avoidance_in_progress():
-            print("Object detected")
             return -2
     return 0

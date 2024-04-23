@@ -201,6 +201,4 @@ if __name__ == "__main__":
     points_file.write("")
     points_file.close()
 
-    print("Starting scan")
     cardinal_direction_sensor_scan(60, 5, (122.88, 122.88, 0))
-    print("Scan complete")
