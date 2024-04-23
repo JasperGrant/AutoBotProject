@@ -98,7 +98,7 @@ def scan():
     # Update POSE If Applicable
     if True:
         # Update the pose,
-        state = update_state([0, 170], get_pred_covariance(), [0, 180], get_pose_past())
+        state = update_state([0, 180], get_pred_covariance(), [0, 180], get_pose_past())
         set_pose_past(state)
 
     global time_since_last_scan
