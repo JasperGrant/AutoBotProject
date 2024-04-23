@@ -23,7 +23,7 @@ def get_pred_covariance():
 # called from motor_control.py
 # Updateing covariavce between scans, stae is updated in the motor control code.
 def propagate_state_covariance(
-    velocitiy, time, heading, state_covariance=[[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+    velocity, time, heading, state_covariance=[[0, 0, 0], [0, 0, 0], [0, 0, 0]]
 ):
     # Need velosity setpoint, time, and previous state
     # Q is the process noise covariance matrix
@@ -31,8 +31,8 @@ def propagate_state_covariance(
 
     # Calculate the Jacobian of the state transition matrix
     G = [
-        [1, 0, -velocitiy * sin(heading) * time],
-        [0, 1, velocitiy * cos(heading) * time],
+        [1, 0, -velocity * sin(heading) * time],
+        [0, 1, velocity * cos(heading) * time],
         [0, 0, 1],
     ]
 
