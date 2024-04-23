@@ -62,7 +62,6 @@ def turn(left_motor, right_motor, theta_goal):
     pose_past = get_pose_past()
 
     while abs(get_pose_past()[2] - theta_goal) > (RADS_FOR_EQUALITY):
-        print(get_pose_past())
         velocity_controller(
             left_motor,
             right_motor,

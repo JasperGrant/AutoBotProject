@@ -5,6 +5,7 @@
 # 2024-04-13
 
 from math import pi
+from time import time, sleep
 from ev3dev2.button import Button
 from detect import (
     reset_avoidance_servo,
@@ -30,8 +31,9 @@ from move import (
     get_y_goal,
     get_theta_goal,
 )
-from odometry import get_pose_past, left_motor, right_motor
-from time import time, sleep
+from odometry import get_pose_past, set_pose_past, left_motor, right_motor
+from EKF import update_state, get_pred_covariance
+
 
 button = Button()
 
@@ -92,6 +94,13 @@ def scan():
     right_motor.on(speed=0)
     cardinal_direction_sensor_scan(60, 5, get_pose_past())
     wall_identification(point_map)
+
+    # Update POSE If Applicable
+    if True:
+        # Update the pose,
+        state = update_state([0, 170], get_pred_covariance(), [0, 180], get_pose_past())
+        set_pose_past(state)
+
     global time_since_last_scan
     time_since_last_scan = time()
 
@@ -114,6 +123,7 @@ def obstacle_avoid():
     # Fully scan object
     # Decide which direction to go
     # Wall follow in that direction
+
     if follow_wall("L"):
         left_motor.on(speed=5)
         right_motor.on(speed=5)
