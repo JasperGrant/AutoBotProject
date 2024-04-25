@@ -27,7 +27,7 @@ def propagate_state_covariance(
 ):
     # Need velosity setpoint, time, and previous state
     # Q is the process noise covariance matrix
-    Q = [[0.01, 0.0, 0.0], [0.0, 0.01, 0.0], [0.0, 0.0, 0.01]]
+    Q = [[0.01, 0.0, 0.0], [0.0, 0.01, 0.0], [0.0, 0.0, 0.0001]]
 
     # Calculate the Jacobian of the state transition matrix
     G = [
@@ -51,7 +51,7 @@ def propagate_state_covariance(
 def update_state(landmark, pred_covariance, landmark_guess, state):
     # Need landmark measurements and previous state
     # R is the measurement noise covariance matrix
-    R = [[0.01, 0.0], [0.0, 0.01]]
+    R = [[10, 0.0], [0.0, 10]]
 
     # Calculate the Jacobian of the measurement model
     H = [[1, 0, 0], [0, 1, 0]]

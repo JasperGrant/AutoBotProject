@@ -21,15 +21,21 @@ from ev3dev2.motor import (
 servo = MediumMotor(OUTPUT_C)
 ultrasonic_sensor = UltrasonicSensor(address=INPUT_3)
 
-# Initialize global point map
-point_map = [[], [], [], [], []]
-
 # Six feet in cm
 SIX_FEET = 182.88
 # Limit for how far a line candidate can be from the expected position of the line
-NEAREST_NEIGHBOUR_LIMIT = 10
+NEAREST_NEIGHBOUR_LIMIT = 60
 # Offset from the servo motor to the ultrasonic sensor
 RANGE_SCAN_OFFSET = 1.5
+
+NUMBER_OF_POINTS_FOR_CERTAINTY = 1
+
+MAX_WALL_GUESSES = 5
+
+VALID_POINT_THRESHOLD = 75
+
+corners = [(0, 0), (0, SIX_FEET), (SIX_FEET, 0), (SIX_FEET, SIX_FEET)]
+walls = [SIX_FEET, SIX_FEET, 0, 0]
 
 
 def reset_servo():
@@ -53,140 +59,131 @@ def transform_distance_to_coordinate(distance, angle, robot_pose):
     ]
 
 
-def sensor_scan(width, resolution, robot_pose):
-    points = []
-    for angle in range(0, -width, -resolution):
-        distances = []
-        move_servo_to_angle(angle)
-        for _ in range(3):  # Take three measurements
-            distance = get_ultrasonic_distance()
-            if distance != 255:
-                distances.append(distance)
-                points_file = open("points.csv", "a")
-                points_file.write(str(point[0]) + " , " + str(point[1]) + "\n")
-                points_file.close()
-        if distances:
-            averaged_distance = sum(distances) / len(distances)
-            map_file = open("map.csv", "a")
-            point = transform_distance_to_coordinate(
-                averaged_distance, -angle, robot_pose
-            )
-            points.append(point)
-            map_file.write(str(point[0]) + " , " + str(point[1]) + "\n")
-            map_file.close()
-        sleep(0.3)  # Wait before moving to the next angle
-    return points
-
-
 def cardinal_direction_sensor_scan(width, resolution, robot_pose):
     # Init empty lists
-    global point_map
-    # Cardinal directions Right, Up, Left, Down
-    cardinal_directions = ["R", "U", "L", "D"]
+    point_map = [[], [], [], []]
     # Loop through integers 0-3 and each cardinal direction
-    for i, direction in enumerate(cardinal_directions):
+    for i in range(4):
         # Define start and end angles for each cardinal direction
         start = (i * 90) - width // 2
         end = (i * 90) + width // 2
         for angle in range(start, end, resolution):
-            distances = []
             move_servo_to_angle(-angle + (robot_pose[2] * 180 / pi) - 90)
             distance = get_ultrasonic_distance()
-            if distance > 75:
+            if distance > VALID_POINT_THRESHOLD:
                 continue
-            for _ in range(5):  # Take three measurements
-                distance = get_ultrasonic_distance()
-                distances.append(distance)
-                points_file = open("points.csv", "a")
-                points_file.write(str(distance))
-                points_file.close()
-            averaged_distance = sum(distances) / len(distances)
-            map_file = open("map.csv", "a")
             point = transform_distance_to_coordinate(
-                averaged_distance - RANGE_SCAN_OFFSET, angle, robot_pose
+                distance - RANGE_SCAN_OFFSET, angle, robot_pose
             )
             point_map[i].append(point)
-            map_file.write(direction + "," + str(point[0]) + "," + str(point[1]) + "\n")
-            map_file.close()
             sleep(0.2)
+    return point_map
 
 
 # Function to get vertical line based on mode of points
-def get_vertical_line(points, line):
+def get_vertical_line(points, line, resolution=1):
     # Convert x values of points to integers
-    x = [round(point[0]) for point in points]
+    x = [round(point[0] / resolution) * resolution for point in points]
     # Get the mode of the x values
     line_locations = sorted(set(x), key=x.count)
-    if line_locations == []:
-        return [(-50, -50), (-50, -50)]
-    line_location = line_locations[-1]
-    # # Set limit based on line position
-    # if line == "L":
-    #     limit = 0
-    # else:
-    #     limit = SIX_FEET
-    # # If selected point is too far from nearest neighbour, remove it
-    # while abs(line_location - limit) > NEAREST_NEIGHBOUR_LIMIT:
-    #     line_locations.pop()
-    #     if line_locations == []:
-    #         return [(0, 0), (0, 0)]
-    #     line_location = line_locations[-1]
-    # # Return final line candidate as two points
-    return [(line_location + 0.5, 0), (line_location + 0.5, SIX_FEET)]
+    if len(line_locations) == 0:
+        return None
+    # Set limit based on line position
+    if line == "L":
+        limit = 0
+    else:
+        limit = SIX_FEET
+    for i in range(min(MAX_WALL_GUESSES, len(line_locations))):
+        line_location = line_locations[-i]
+        line_location_points = x.count(line_location)
+        if (
+            line_location_points > NUMBER_OF_POINTS_FOR_CERTAINTY
+            and abs(line_location - limit) < NEAREST_NEIGHBOUR_LIMIT
+        ):
+            return line_location + resolution / 2, line_location_points
+    return None
 
 
 # Function to get vertical line based on mode of points
-def get_horizontal_line(points, line):
+def get_horizontal_line(points, line, resolution=1):
     # Convert y values of points to integers
-    y = [round(point[1]) for point in points]
+    y = [round(point[1] / resolution) * resolution for point in points]
     # Get the mode of the y values
     line_locations = sorted(set(y), key=y.count)
-    if line_locations == []:
-        return [(-50, -50), (-50, -50)]
-    line_location = line_locations[-1]
-    # # Set limit based on line position
-    # if line == "U":
-    #     limit = SIX_FEET
-    # else:
-    #     limit = 0
-    # # If selected point is too far from nearest neighbour, remove it
-    # while abs(line_location - limit) > NEAREST_NEIGHBOUR_LIMIT:
-    #     line_locations.pop()
-    #     if line_locations == []:
-    #         return [(-50, -50), (-50, -50)]
-    #     line_location = line_locations[-1]
-    # # Return final line candidate as two points
-    return [(0, line_location + 0.5), (SIX_FEET, line_location + 0.5)]
+    if len(line_locations):
+        return None
+    # Set limit based on line position
+    if line == "U":
+        limit = SIX_FEET
+    else:
+        limit = 0
+    for i in range(min(MAX_WALL_GUESSES, len(line_locations))):
+        line_location = line_locations[-i]
+        line_location_points = y.count(line_location)
+        if (
+            line_location_points > NUMBER_OF_POINTS_FOR_CERTAINTY
+            and abs(line_location - limit) < NEAREST_NEIGHBOUR_LIMIT
+        ):
+            return line_location + resolution / 2, line_location_points
+    return None
 
 
 # Function to identify walls based on four groups of points
-def wall_identification(data):
-    global point_map
-    walls = []
-    # Split data into four groups
-    data = [
-        [(float(point[0]), float(point[1])) for point in group] for group in data[0:-1]
-    ]
-    # Get vertical and horizontal lines for each group
-    walls.append(get_vertical_line(data[0], "R"))
-    walls.append(get_horizontal_line(data[1], "U"))
-    walls.append(get_vertical_line(data[2], "L"))
-    walls.append(get_horizontal_line(data[3], "D"))
-    map_file = open("map.csv", "a")
+def wall_identification(data, pose_past):
 
-    corners = [
-        (walls[0][0][0], walls[1][0][1]),
-        (walls[0][0][0], walls[3][0][1]),
-        (walls[2][0][0], walls[3][0][1]),
-        (walls[2][0][0], walls[1][0][1]),
-    ]
-    point_map[4] = corners
-    assert len(corners) == 4
-    for point in corners:
-        map_file.write("C," + str(point[0]) + "," + str(point[1]) + "\n")
+    # Split data into four groups
+    data = [[(float(point[0]), float(point[1])) for point in group] for group in data]
+    # Get vertical and horizontal lines candidates
+    R_wall = get_vertical_line(data[0], "R")
+    U_wall = get_horizontal_line(data[1], "U")
+    L_wall = get_vertical_line(data[2], "L")
+    D_wall = get_horizontal_line(data[3], "D")
+
+    global walls
+    global corners
+
+    if R_wall is not None:
+        walls = R_wall[0]
+    if U_wall is not None:
+        walls[1] = U_wall[0]
+    if L_wall is not None:
+        walls[2] = L_wall[0]
+    if D_wall is not None:
+        walls[3] = D_wall[0]
+
+    pose_file = open("pose.csv", "a")
+    pose_file.write(
+        str(walls[0])
+        + ","
+        + str(walls[1])
+        + ","
+        + str(walls[2])
+        + ","
+        + str(walls[3])
+        + "\n"
+    )
+    pose_file.close()
+
+    current_closest_corner = sorted(
+        range(4),
+        key=lambda i: (corners[i][0] - pose_past[0]) ** 2
+        + (corners[i][1] - pose_past[1]) ** 2,
+    )[0]
+
+    prev_corner = corners[current_closest_corner]
+
+    corners[0] = (walls[2], walls[3])
+    corners[1] = (walls[2], walls[1])
+    corners[2] = (walls[0], walls[3])
+    corners[3] = (walls[0], walls[1])
+
+    new_corner = corners[current_closest_corner]
+
+    map_file = open("map.csv", "a")
+    map_file.write("C," + str(new_corner[0]) + "," + str(new_corner[1]) + "\n")
     map_file.close()
 
-    return walls
+    return new_corner, prev_corner
 
 
 # Test the sensor scan function

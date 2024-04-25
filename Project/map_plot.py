@@ -14,68 +14,68 @@ WALL_ESTIMATION_RESOLUTION = 5
 # These will both be combined into one function at some point in the future
 
 
-# Function to get vertical line based on mode of points
-def get_vertical_line(points, line, resolution=1):
-    # Convert x values of points to integers
-    x = [round(point[0] / resolution) * resolution for point in points]
-    # Get the mode of the x values
-    line_locations = sorted(set(x), key=x.count)
-    line_location = line_locations[-1]
-    # Set limit based on line position
-    if line == "L":
-        limit = 0
-    else:
-        limit = SIX_FEET
-    # # If selected point is too far from nearest neighbour, remove it
-    # while abs(line_location - limit) > NEAREST_NEIGHBOUR_LIMIT:
-    #     line_locations.pop()
-    #     if line_locations == []:
-    #         return [(-50, -50), (-50, -50)]
-    #     line_location = line_locations[-1]
-    # Return final line candidate as two points
-    return [
-        (line_location + resolution / 2, 0),
-        (line_location + resolution / 2, SIX_FEET),
-    ]
+# # Function to get vertical line based on mode of points
+# def get_vertical_line(points, line, resolution=1):
+#     # Convert x values of points to integers
+#     x = [round(point[0] / resolution) * resolution for point in points]
+#     # Get the mode of the x values
+#     line_locations = sorted(set(x), key=x.count)
+#     line_location = line_locations[-1]
+#     # Set limit based on line position
+#     if line == "L":
+#         limit = 0
+#     else:
+#         limit = SIX_FEET
+#     # # If selected point is too far from nearest neighbour, remove it
+#     # while abs(line_location - limit) > NEAREST_NEIGHBOUR_LIMIT:
+#     #     line_locations.pop()
+#     #     if line_locations == []:
+#     #         return [(-50, -50), (-50, -50)]
+#     #     line_location = line_locations[-1]
+#     # Return final line candidate as two points
+#     return [
+#         (line_location + resolution / 2, 0),
+#         (line_location + resolution / 2, SIX_FEET),
+#     ]
 
 
-# Function to get vertical line based on mode of points
-def get_horizontal_line(points, line, resolution=1):
-    # Convert y values of points to integers
-    y = [round(point[1] / resolution) * resolution for point in points]
-    # Get the mode of the y values
-    line_locations = sorted(set(y), key=y.count)
-    line_location = line_locations[-1]
-    # Set limit based on line position
-    if line == "U":
-        limit = SIX_FEET
-    else:
-        limit = 0
-    # # If selected point is too far from nearest neighbour, remove it
-    # while abs(line_location - limit) > NEAREST_NEIGHBOUR_LIMIT:
-    #     line_locations.pop()
-    #     if line_locations == []:
-    #         return [(-50, -50), (-50, -50)]
-    #     line_location = line_locations[-1]
-    # Return final line candidate as two points
-    return [
-        (0, line_location + resolution / 2),
-        (SIX_FEET, line_location + resolution / 2),
-    ]
+# # Function to get vertical line based on mode of points
+# def get_horizontal_line(points, line, resolution=1):
+#     # Convert y values of points to integers
+#     y = [round(point[1] / resolution) * resolution for point in points]
+#     # Get the mode of the y values
+#     line_locations = sorted(set(y), key=y.count)
+#     line_location = line_locations[-1]
+#     # Set limit based on line position
+#     if line == "U":
+#         limit = SIX_FEET
+#     else:
+#         limit = 0
+#     # # If selected point is too far from nearest neighbour, remove it
+#     # while abs(line_location - limit) > NEAREST_NEIGHBOUR_LIMIT:
+#     #     line_locations.pop()
+#     #     if line_locations == []:
+#     #         return [(-50, -50), (-50, -50)]
+#     #     line_location = line_locations[-1]
+#     # Return final line candidate as two points
+#     return [
+#         (0, line_location + resolution / 2),
+#         (SIX_FEET, line_location + resolution / 2),
+#     ]
 
 
-# Function to identify walls based on four groups of points
-def wall_identification(data):
-    walls = []
-    # Split data into four groups
-    data = [[(float(point[0]), float(point[1])) for point in group] for group in data]
-    # Get vertical and horizontal lines for each group
-    walls.append(get_vertical_line(data[0], "R", WALL_ESTIMATION_RESOLUTION))
-    walls.append(get_horizontal_line(data[1], "U", WALL_ESTIMATION_RESOLUTION))
-    walls.append(get_vertical_line(data[2], "L", WALL_ESTIMATION_RESOLUTION))
-    # walls.append(get_horizontal_line(data[3], "D", WALL_ESTIMATION_RESOLUTION))
+# # Function to identify walls based on four groups of points
+# def wall_identification(data):
+#     walls = []
+#     # Split data into four groups
+#     data = [[(float(point[0]), float(point[1])) for point in group] for group in data]
+#     # Get vertical and horizontal lines for each group
+#     walls.append(get_vertical_line(data[0], "R", WALL_ESTIMATION_RESOLUTION))
+#     walls.append(get_horizontal_line(data[1], "U", WALL_ESTIMATION_RESOLUTION))
+#     walls.append(get_vertical_line(data[2], "L", WALL_ESTIMATION_RESOLUTION))
+#     # walls.append(get_horizontal_line(data[3], "D", WALL_ESTIMATION_RESOLUTION))
 
-    return walls
+#     return walls
 
 
 map_file = open("map.csv", "r").read()
@@ -86,7 +86,7 @@ group_of_points = [
     for direction in "RULDCF"
 ]
 
-predicted_walls = wall_identification(group_of_points)
+# predicted_walls = wall_identification(group_of_points)
 
 actual_walls = [
     [(0, 0), (0, SIX_FEET)],
@@ -110,8 +110,8 @@ for point in group_of_points[4]:
 for point in group_of_points[5]:
     plt.scatter(float(point[0]), float(point[1]), color="blue")
 
-for wall in predicted_walls:
-    plt.plot([point[0] for point in wall], [point[1] for point in wall], color="blue")
+# for wall in predicted_walls:
+#     plt.plot([point[0] for point in wall], [point[1] for point in wall], color="blue")
 
 for wall in actual_walls:
     plt.plot([point[0] for point in wall], [point[1] for point in wall], color="green")

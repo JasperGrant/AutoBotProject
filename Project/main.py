@@ -24,7 +24,6 @@ from sensor import (
     reset_servo,
     cardinal_direction_sensor_scan,
     wall_identification,
-    point_map,
 )
 from move import (
     move_forward,
@@ -42,11 +41,11 @@ from EKF import update_state, get_pred_covariance
 button = Button()
 
 WAYPOINT_FOLLOW_CONSTANT_PRIORITY = 6
-SCAN_SLOPE_PRIORITY = 0.4
+SCAN_SLOPE_PRIORITY = 0.6
 OBSTACLE_NOT_DETECTED_CONSTANT_PRIORITY = 2
 OBSTACLE_DETECTED_CONSTANT_PRIORITY = 7
 OBJECT_DETECTED_CONSTANT_SCAN_PRIORITY = 8
-OBSTACLE_DETECTED_SCAN_FREQUENCY = 75
+OBSTACLE_DETECTED_SCAN_FREQUENCY = 50
 
 
 def get_distance_since_last_scan():
@@ -94,14 +93,50 @@ def waypoint_follow_priority():
 def scan():
     left_motor.on(speed=0)
     right_motor.on(speed=0)
-    cardinal_direction_sensor_scan(60, 5, get_pose_past())
-    wall_identification(point_map)
-
+    point_map = cardinal_direction_sensor_scan(60, 5, get_pose_past())
+    possible_corner = wall_identification(point_map, get_pose_past())
     # Update POSE If Applicable
-    if True:
+    shift_string = "No state shift\n"
+    if possible_corner is not None:
         # Update the pose,
-        state = update_state([0, 180], get_pred_covariance(), [0, 180], get_pose_past())
+        prev_state = get_pose_past()
+        state = update_state(
+            possible_corner[0],
+            get_pred_covariance(),
+            possible_corner[1],
+            prev_state,
+        )
+        shift_string = (
+            "State shifted from "
+            + str(prev_state[0])
+            + ","
+            + str(prev_state[1])
+            + ","
+            + str(prev_state[2])
+            + " to "
+            + str(state[0])
+            + ","
+            + str(state[1])
+            + ","
+            + str(state[2])
+            + ","
+            "\n"
+        )
         set_pose_past(state)
+    pose_file = open("pose.csv", "a")
+    pose_file.write(shift_string)
+    pose_file.close()
+    print(shift_string)
+    # TODO: whatever we need to do with the point map
+
+    # Save the point map to a file
+    for i, direction in enumerate(["R", "U", "L", "D"]):
+        points_file = open("points.csv", "a")
+        for point in point_map[i]:
+            points_file.write(
+                direction + "," + str(point[0]) + "," + str(point[1]) + "\n"
+            )
+        points_file.close()
 
     global time_since_last_scan
     time_since_last_scan = time()
