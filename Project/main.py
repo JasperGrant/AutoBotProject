@@ -127,7 +127,14 @@ def scan():
     pose_file.write(shift_string)
     pose_file.close()
     print(shift_string)
-    # TODO: whatever we need to do with the point map
+
+    point_map = [
+        [
+            (point[0] + state[0] - prev_state[0], point[1] + state[1] - prev_state[1])
+            for point in direction
+        ]
+        for direction in point_map
+    ]
 
     # Save the point map to a file
     for i, direction in enumerate(["R", "U", "L", "D"]):

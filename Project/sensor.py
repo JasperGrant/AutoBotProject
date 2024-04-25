@@ -34,8 +34,17 @@ MAX_WALL_GUESSES = 5
 
 VALID_POINT_THRESHOLD = 75
 
+WALL_CERTAINTY_RESOLUTION = 2
+
 corners = [(0, 0), (0, SIX_FEET), (SIX_FEET, 0), (SIX_FEET, SIX_FEET)]
 walls = [SIX_FEET, SIX_FEET, 0, 0]
+
+
+def reset_walls_and_corners():
+    global walls
+    global corners
+    walls = [SIX_FEET, SIX_FEET, 0, 0]
+    corners = [(0, 0), (0, SIX_FEET), (SIX_FEET, 0), (SIX_FEET, SIX_FEET)]
 
 
 def reset_servo():
@@ -134,10 +143,10 @@ def wall_identification(data, pose_past):
     # Split data into four groups
     data = [[(float(point[0]), float(point[1])) for point in group] for group in data]
     # Get vertical and horizontal lines candidates
-    R_wall = get_vertical_line(data[0], "R")
-    U_wall = get_horizontal_line(data[1], "U")
-    L_wall = get_vertical_line(data[2], "L")
-    D_wall = get_horizontal_line(data[3], "D")
+    R_wall = get_vertical_line(data[0], "R", resolution=2)
+    U_wall = get_horizontal_line(data[1], "U", resolution=2)
+    L_wall = get_vertical_line(data[2], "L", resolution=2)
+    D_wall = get_horizontal_line(data[3], "D", resolution=2)
 
     global walls
     global corners
@@ -178,6 +187,9 @@ def wall_identification(data, pose_past):
     corners[3] = (walls[0], walls[1])
 
     new_corner = corners[current_closest_corner]
+
+    if new_corner != prev_corner:
+        reset_walls_and_corners()
 
     map_file = open("map.csv", "a")
     map_file.write("C," + str(new_corner[0]) + "," + str(new_corner[1]) + "\n")
