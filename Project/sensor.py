@@ -24,7 +24,7 @@ ultrasonic_sensor = UltrasonicSensor(address=INPUT_3)
 # Six feet in cm
 SIX_FEET = 182.88
 # Limit for how far a line candidate can be from the expected position of the line
-NEAREST_NEIGHBOUR_LIMIT = 60
+NEAREST_NEIGHBOUR_LIMIT = 20
 # Offset from the servo motor to the ultrasonic sensor
 RANGE_SCAN_OFFSET = 1.5
 
@@ -32,7 +32,7 @@ NUMBER_OF_POINTS_FOR_CERTAINTY = 1
 
 MAX_WALL_GUESSES = 5
 
-VALID_POINT_THRESHOLD = 75
+VALID_POINT_THRESHOLD = 50
 
 WALL_CERTAINTY_RESOLUTION = 2
 
@@ -152,7 +152,7 @@ def wall_identification(data, pose_past):
     global corners
 
     if R_wall is not None:
-        walls = R_wall[0]
+        walls[0] = R_wall[0]
     if U_wall is not None:
         walls[1] = U_wall[0]
     if L_wall is not None:

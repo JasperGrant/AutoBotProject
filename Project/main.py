@@ -8,9 +8,9 @@ from math import pi
 from time import time, sleep
 from ev3dev2.button import Button
 from detect import (
-    reset_avoidance_servo,
     get_avoidance_in_progress,
     set_avoidance_in_progress,
+    set_bumpers_pressed,
 )
 from avoid import (
     follow_wall,
@@ -41,7 +41,7 @@ from EKF import update_state, get_pred_covariance
 button = Button()
 
 WAYPOINT_FOLLOW_CONSTANT_PRIORITY = 6
-SCAN_SLOPE_PRIORITY = 0.6
+SCAN_SLOPE_PRIORITY = 1
 OBSTACLE_NOT_DETECTED_CONSTANT_PRIORITY = 2
 OBSTACLE_DETECTED_CONSTANT_PRIORITY = 7
 OBJECT_DETECTED_CONSTANT_SCAN_PRIORITY = 8
@@ -58,7 +58,7 @@ def waypoint_follow():
     goals_reached = get_goals_reached()
     theta_goal = get_theta_goal(goals_reached)
     # TODO: Make move_forward and turn interruptible
-    if abs(pose_past[2] - theta_goal) > 10 * pi / 180:
+    if abs(pose_past[2] - theta_goal) > 45 * pi / 180:
         turn_result = turn(left_motor, right_motor, theta_goal)
         if turn_result == -2:
             left_motor.stop()
@@ -84,6 +84,10 @@ def waypoint_follow():
         left_motor.stop()
         right_motor.stop()
         return 0
+    if move_result == -3:
+        left_motor.stop()
+        right_motor.stop()
+        return -3
 
 
 def waypoint_follow_priority():
@@ -98,6 +102,7 @@ def scan():
     # Update POSE If Applicable
     shift_string = "No state shift\n"
     if possible_corner is not None:
+        print("Corner Detected: ", possible_corner[0], possible_corner[1])
         # Update the pose,
         prev_state = get_pose_past()
         state = update_state(
@@ -122,28 +127,31 @@ def scan():
             + ","
             "\n"
         )
-        set_pose_past(state)
+        point_map = [
+            [
+                (
+                    point[0] + state[0] - prev_state[0],
+                    point[1] + state[1] - prev_state[1],
+                )
+                for point in direction
+            ]
+            for direction in point_map
+        ]
+
+        set_pose_past([state[0], state[1], prev_state[2]])
     pose_file = open("pose.csv", "a")
     pose_file.write(shift_string)
     pose_file.close()
     print(shift_string)
-
-    point_map = [
-        [
-            (point[0] + state[0] - prev_state[0], point[1] + state[1] - prev_state[1])
-            for point in direction
-        ]
-        for direction in point_map
-    ]
-
     # Save the point map to a file
     for i, direction in enumerate(["R", "U", "L", "D"]):
-        points_file = open("points.csv", "a")
+        points_file = open("map.csv", "a")
         for point in point_map[i]:
             points_file.write(
                 direction + "," + str(point[0]) + "," + str(point[1]) + "\n"
             )
         points_file.close()
+    print("Scan Complete")
 
     global time_since_last_scan
     time_since_last_scan = time()
@@ -176,6 +184,7 @@ def obstacle_avoid():
         right_motor.stop()
         set_avoidance_in_progress(False)
         set_wall_following_direction(None)
+        set_bumpers_pressed(False)
 
 
 def obstacle_avoid_priority():
@@ -211,6 +220,11 @@ def arbitrator():
     behavior_file = open("behavior.csv", "w")
     behavior_file.write("")
     behavior_file.close()
+
+    # Clear the pose file
+    pose_file = open("pose.csv", "w")
+    pose_file.write("")
+    pose_file.close()
 
     while not button.any():
         priorities = [priority() for priority in priority_functions]

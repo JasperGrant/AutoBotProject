@@ -48,10 +48,10 @@ def propagate_state_covariance(
     set_pred_covariance(pred_covariance)
 
 
-def update_state(landmark, pred_covariance, landmark_guess, state):
+def update_state(new_landmark, pred_covariance, prev_landmark, state):
     # Need landmark measurements and previous state
     # R is the measurement noise covariance matrix
-    R = [[10, 0.0], [0.0, 10]]
+    R = [[5, 0.0], [0.0, 5]]
 
     # Calculate the Jacobian of the measurement model
     H = [[1, 0, 0], [0, 1, 0]]
@@ -71,8 +71,15 @@ def update_state(landmark, pred_covariance, landmark_guess, state):
         ),
     )
 
+    print("Kalman Gain: ", K)
+
     # Calculate the innovation
-    z = [[landmark[0] - landmark_guess[0]], [landmark[1] - landmark_guess[1]]]
+    z = [
+        [-(new_landmark[0] - prev_landmark[0])],
+        [-(new_landmark[1] - prev_landmark[1])],
+    ]
+
+    print("Innovation: ", z)
 
     # Update the state
     state_update = la.matrix_addition([state], la.transpose(la.matrix_multiply(K, z)))

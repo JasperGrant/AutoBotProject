@@ -5,11 +5,11 @@
 import threading
 
 # Sensor inputs
-from ev3dev2.sensor import INPUT_1
+from ev3dev2.sensor import INPUT_1, INPUT_2, INPUT_4
 from time import sleep, time
 
 # Sensor types
-from ev3dev2.sensor.lego import UltrasonicSensor
+from ev3dev2.sensor.lego import UltrasonicSensor, TouchSensor
 
 from ev3dev2.motor import (
     MediumMotor,
@@ -24,8 +24,12 @@ SCANNING_ANGLE = 50
 
 avoidance_servo = MediumMotor(OUTPUT_B)
 avoidance_ultrasonic_sensor = UltrasonicSensor(address=INPUT_1)
+L_bumper = TouchSensor(address=INPUT_4)
+R_bumper = TouchSensor(address=INPUT_2)
 
 avoidance_in_progress = False
+
+bumpers_pressed = False
 
 
 def get_avoidance_in_progress():
@@ -35,6 +39,24 @@ def get_avoidance_in_progress():
 def set_avoidance_in_progress(value):
     global avoidance_in_progress
     avoidance_in_progress = value
+
+
+def get_bumpers_pressed():
+    return bumpers_pressed
+
+
+def set_bumpers_pressed(value):
+    global bumpers_pressed
+    bumpers_pressed = value
+
+
+def is_bumper_pressed():
+    if L_bumper.is_pressed:
+        return "L"
+    elif R_bumper.is_pressed:
+        return "R"
+    else:
+        return False
 
 
 avoidance_servo_mutex = threading.Lock()
@@ -61,9 +83,13 @@ def move_avoidance_servo_to_angle(angle, speed=10):
     with avoidance_servo_mutex:
         avoidance_servo.on_to_position(speed, angle)
         starting_time = time()
-        while time() - starting_time < 0.05:
+        while time() - starting_time < 0.01:
             if is_object_detected():
                 set_avoidance_in_progress(True)
+            status = is_bumper_pressed()
+            if status:
+                set_avoidance_in_progress(True)
+                set_bumpers_pressed(status)
 
 
 def front_sensor_continous_scan():

@@ -31,10 +31,14 @@ def get_pose_past():
     return pose_past
 
 
+pose_mutex = threading.Lock()
+
+
 def set_pose_past(new_pose):
-    global pose_past
-    print(new_pose)
-    pose_past = new_pose
+    with pose_mutex:
+        global pose_past
+        # print(new_pose)
+        pose_past = new_pose
 
 
 def get_wheel_velocity(left_motor, right_motor, TIME):

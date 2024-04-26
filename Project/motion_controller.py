@@ -43,7 +43,7 @@ def velocity_controller(
         else:
             omega = ev3_math.clamp(omega, 3 / BASE_WIDTH, 8 / BASE_WIDTH)
     else:
-        velo = ev3_math.clamp(velo, 7, 12)
+        velo = ev3_math.clamp(velo, 7, 10)
         omega = ev3_math.clamp(omega, -2 / BASE_WIDTH, 2 / BASE_WIDTH)
 
     # if alpha > abs(pi/2):

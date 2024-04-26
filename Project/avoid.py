@@ -9,6 +9,7 @@ from time import time, sleep
 from EV3_math_modules import clamp, circle_minus
 from detect import (
     get_avoidance_ultrasonic_distance,
+    get_bumpers_pressed,
     is_object_detected,
     move_avoidance_servo_to_angle,
     AVOIDANCE_SERVO_RIGHT_MAX,
@@ -46,6 +47,22 @@ wall_following_direction = None
 prev_error = 0
 integral_error = 0
 
+num_turns = 0
+
+
+def increment_num_turns():
+    global num_turns
+    num_turns += 1
+
+
+def reset_num_turns():
+    global num_turns
+    num_turns = 0
+
+
+def get_num_turns():
+    return num_turns
+
 
 def get_wall_following_direction():
     return wall_following_direction
@@ -58,12 +75,10 @@ def set_wall_following_direction(direction):
 
 def follow_wall(direction="L"):
     if get_wall_following_direction() is None:
+        reset_num_turns()
         # Read survey angle
 
         pose_past = get_pose_past()
-
-        count_left = 0
-        count_right = 0
 
         sleep(5)
 
@@ -71,25 +86,38 @@ def follow_wall(direction="L"):
         L_min = float("inf")
         R_min = float("inf")
 
+        if get_bumpers_pressed():
+            # Backup
+            left_motor.on(speed=-MOTOR_LOW)
+            right_motor.on(speed=-MOTOR_LOW)
+            sleep(3)
+            left_motor.stop()
+            right_motor.stop()
+
         object_in_front = False
         for i in range(90, 0, -10):
             move_avoidance_servo_to_angle(i)
             distance = get_avoidance_ultrasonic_distance()
-            if i < 15 and distance < FRONT_SENSOR_LIMIT:
+            if i < 25 and distance < FRONT_SENSOR_LIMIT:
                 object_in_front = True
-            unclamped_point = (
-                distance * cos(i + pose_past[2])
-                + pose_past[0]
-                + cos(pose_past[2]) * AVOIDANCE_SERVO_OFFSET,
-                distance * sin(i + pose_past[2])
-                + pose_past[1]
-                + sin(pose_past[2]) * AVOIDANCE_SERVO_OFFSET,
-            )
-            map_file = open("map.csv", "a")
-            map_file.write(
-                "F," + str(unclamped_point[0]) + "," + str(unclamped_point[1]) + "\n"
-            )
-            map_file.close()
+            if distance < 40:
+                unclamped_point = (
+                    distance * cos(i + pose_past[2])
+                    + pose_past[0]
+                    + cos(pose_past[2]) * AVOIDANCE_SERVO_OFFSET,
+                    distance * sin(i + pose_past[2])
+                    + pose_past[1]
+                    + sin(pose_past[2]) * AVOIDANCE_SERVO_OFFSET,
+                )
+                map_file = open("map.csv", "a")
+                map_file.write(
+                    "F,"
+                    + str(unclamped_point[0])
+                    + ","
+                    + str(unclamped_point[1])
+                    + "\n"
+                )
+                map_file.close()
             distance = clamp(
                 distance,
                 0,
@@ -109,21 +137,26 @@ def follow_wall(direction="L"):
         for i in range(0, -90, -10):
             move_avoidance_servo_to_angle(i)
             distance = get_avoidance_ultrasonic_distance()
-            if i > -15 and distance < FRONT_SENSOR_LIMIT:
+            if i > -25 and distance < FRONT_SENSOR_LIMIT:
                 object_in_front = True
-            unclamped_point = (
-                distance * cos(i + pose_past[2])
-                + pose_past[0]
-                + cos(pose_past[2]) * AVOIDANCE_SERVO_OFFSET,
-                distance * sin(i + pose_past[2])
-                + pose_past[1]
-                + sin(pose_past[2]) * AVOIDANCE_SERVO_OFFSET,
-            )
-            map_file = open("map.csv", "a")
-            map_file.write(
-                "F," + str(unclamped_point[0]) + "," + str(unclamped_point[1]) + "\n"
-            )
-            map_file.close()
+            if distance < 40:
+                unclamped_point = (
+                    distance * cos(i + pose_past[2])
+                    + pose_past[0]
+                    + cos(pose_past[2]) * AVOIDANCE_SERVO_OFFSET,
+                    distance * sin(i + pose_past[2])
+                    + pose_past[1]
+                    + sin(pose_past[2]) * AVOIDANCE_SERVO_OFFSET,
+                )
+                map_file = open("map.csv", "a")
+                map_file.write(
+                    "F,"
+                    + str(unclamped_point[0])
+                    + ","
+                    + str(unclamped_point[1])
+                    + "\n"
+                )
+                map_file.close()
             distance = clamp(
                 distance,
                 0,
@@ -142,17 +175,18 @@ def follow_wall(direction="L"):
             R_min = min(R_min, get_goal_distance(point, get_goals_reached()))
 
         direction = "L" if L_min < R_min else "R"
+        if get_bumpers_pressed():
+            direction = "R" if get_bumpers_pressed() == "L" else "L"
+            object_in_front = True
 
+        avoidance_turn = pi / 2 if not get_bumpers_pressed() else pi / 4
         if object_in_front:
-            if direction == "L":
-                goal = pose_past[2] + pi / 2
-                turn(left_motor, right_motor, circle_minus(goal))
-                left_motor.stop()
-                right_motor.stop()
-            else:
-                turn(left_motor, right_motor, circle_minus(pose_past[2] - pi / 2))
-                left_motor.stop()
-                right_motor.stop()
+            goal = pose_past[2] + (
+                avoidance_turn if direction == "L" else -avoidance_turn
+            )
+            turn(left_motor, right_motor, circle_minus(goal))
+            left_motor.stop()
+            right_motor.stop()
 
         set_wall_following_direction(direction)
 
@@ -210,8 +244,9 @@ def follow_wall(direction="L"):
     goal_angle = get_goal_angle(pose_past, get_goals_reached())
 
     # Wrong direction case
-    if goal_angle > 135 or goal_angle < -135:
+    if (goal_angle > 135 or goal_angle < -135) and get_num_turns() < 2:
         # Flip 180 degrees
+        increment_num_turns()
         turn(left_motor, right_motor, circle_minus(pose_past[2] + pi))
         set_wall_following_direction("L" if direction == "R" else "R")
         return False
@@ -231,9 +266,5 @@ def follow_wall(direction="L"):
             move_avoidance_servo_to_angle(i)
             if is_object_detected(CLEAR_PATH_LIMIT):
                 detected = True
-        # for i in range(90, -90, -30):
-        #     move_avoidance_servo_to_angle(i)
-        #     if is_object_detected():
-        #         detected = True
         return not detected
     return False

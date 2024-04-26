@@ -6,6 +6,7 @@
 
 from math import degrees, atan2, sqrt
 from EV3_math_modules import circle_minus
+from math import cos, sin
 
 
 goals_reached = 0
@@ -59,12 +60,12 @@ def increment_goals_reached():
     return goals_reached
 
 
-def get_goal_angle(pose_past, goals_reached):
+def get_goal_angle(pose_past, goals_reached, offset=10):
     return degrees(
         circle_minus(
             atan2(
-                get_y_goal(goals_reached) - pose_past[1],
-                get_x_goal(goals_reached) - pose_past[0],
+                get_y_goal(goals_reached) - pose_past[1] + cos(pose_past[2]) * offset,
+                get_x_goal(goals_reached) - pose_past[0] + sin(pose_past[2]) * offset,
             )
             - pose_past[2]
         )
