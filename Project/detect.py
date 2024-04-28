@@ -84,6 +84,7 @@ def move_avoidance_servo_to_angle(angle, speed=10):
         avoidance_servo.on_to_position(speed, angle)
         starting_time = time()
         while time() - starting_time < 0.01:
+            sleep(0.1)
             if is_object_detected():
                 set_avoidance_in_progress(True)
             status = is_bumper_pressed()
@@ -101,7 +102,11 @@ def front_sensor_continous_scan():
             for i in range(SCANNING_ANGLE, -SCANNING_ANGLE, int(-SCANNING_ANGLE / 2)):
                 move_avoidance_servo_to_angle(i)
         else:
-            sleep(1)
+            sleep(0.5)
+            status = is_bumper_pressed()
+            if status:
+                set_avoidance_in_progress(True)
+                set_bumpers_pressed(status)
 
 
 scanning_thread = threading.Thread(target=front_sensor_continous_scan)

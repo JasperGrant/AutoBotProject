@@ -10,12 +10,14 @@ from EV3_math_modules import clamp, circle_minus
 from detect import (
     get_avoidance_ultrasonic_distance,
     get_bumpers_pressed,
+    set_bumpers_pressed,
     is_object_detected,
     move_avoidance_servo_to_angle,
     AVOIDANCE_SERVO_RIGHT_MAX,
     AVOIDANCE_SERVO_LEFT_MAX,
 )
 from move import turn
+from sensor import SIX_FEET
 
 from goals import (
     get_goal_angle,
@@ -31,7 +33,6 @@ MOTOR_HIGH = 10
 MOTOR_LOW = 5
 
 k_p = 0.1
-k_i = 0.1
 k_d = 0.1
 
 WALL_DISTANCE = 15
@@ -42,10 +43,11 @@ CLEAR_PATH_LIMIT = 25
 
 AVOIDANCE_SERVO_OFFSET = 10
 
+OBSTACLE_NEXT_TO_WALL_DISTANCE = 40
+
 wall_following_direction = None
 
 prev_error = 0
-integral_error = 0
 
 num_turns = 0
 
@@ -175,6 +177,15 @@ def follow_wall(direction="L"):
             R_min = min(R_min, get_goal_distance(point, get_goals_reached()))
 
         direction = "L" if L_min < R_min else "R"
+
+        # Override direction if too close to wall
+        if pose_past[0] < 30 and 0 < pose_past[2] < pi:
+            direction = "R"
+        if pose_past[0] > SIX_FEET - 30 and -pi < pose_past[2] < 0:
+            direction = "L"
+        if pose_past[1] > SIX_FEET - 30 and -pi / 2 < pose_past[2] < pi / 2:
+            direction = "R"
+
         if get_bumpers_pressed():
             direction = "R" if get_bumpers_pressed() == "L" else "L"
             object_in_front = True
@@ -189,6 +200,15 @@ def follow_wall(direction="L"):
             right_motor.stop()
 
         set_wall_following_direction(direction)
+        set_bumpers_pressed(False)
+
+    else:
+        if get_bumpers_pressed():
+            set_wall_following_direction(None)
+            left_motor.stop()
+            right_motor.stop()
+
+            return False
 
     pose_past = get_pose_past()
 
@@ -201,14 +221,9 @@ def follow_wall(direction="L"):
     error = clamp(WALL_DISTANCE - survey_angle_reading, -25, 25)
 
     global prev_error
-    dervaitive_error = error - prev_error
+    derivative_error = error - prev_error
 
-    # global integral_error
-    # integral_error += error
-
-    # print("Error: ", error)
-
-    motor_input_change = k_p * error + k_d * dervaitive_error  # + k_i * integral_error
+    motor_input_change = k_p * error + k_d * derivative_error
 
     # Set previous error
 

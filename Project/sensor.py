@@ -24,7 +24,7 @@ ultrasonic_sensor = UltrasonicSensor(address=INPUT_3)
 # Six feet in cm
 SIX_FEET = 182.88
 # Limit for how far a line candidate can be from the expected position of the line
-NEAREST_NEIGHBOUR_LIMIT = 20
+NEAREST_NEIGHBOUR_LIMIT = 30
 # Offset from the servo motor to the ultrasonic sensor
 RANGE_SCAN_OFFSET = 1.5
 

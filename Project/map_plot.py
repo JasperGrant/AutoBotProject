@@ -3,91 +3,37 @@
 # 2024-04-06
 
 import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+def euclidean_distance(point1, point2):
+    return ((point1[0] - point2[0]) ** 2 + (point1[1] - point2[1]) ** 2) ** 0.5
+
+
+def is_point_outlier(point, group):
+    for points in group:
+        for other_point in points:
+            if point != other_point and euclidean_distance(point, other_point) < 10:
+                return False
+    return True
+
 
 # Six feet in cm
 SIX_FEET = 182.88
-# Limit for how far a line candidate can be from the expected position of the line
-NEAREST_NEIGHBOUR_LIMIT = 30
-# Resolution for wall estimation
-WALL_ESTIMATION_RESOLUTION = 5
 
-# These will both be combined into one function at some point in the future
-
-
-# # Function to get vertical line based on mode of points
-# def get_vertical_line(points, line, resolution=1):
-#     # Convert x values of points to integers
-#     x = [round(point[0] / resolution) * resolution for point in points]
-#     # Get the mode of the x values
-#     line_locations = sorted(set(x), key=x.count)
-#     line_location = line_locations[-1]
-#     # Set limit based on line position
-#     if line == "L":
-#         limit = 0
-#     else:
-#         limit = SIX_FEET
-#     # # If selected point is too far from nearest neighbour, remove it
-#     # while abs(line_location - limit) > NEAREST_NEIGHBOUR_LIMIT:
-#     #     line_locations.pop()
-#     #     if line_locations == []:
-#     #         return [(-50, -50), (-50, -50)]
-#     #     line_location = line_locations[-1]
-#     # Return final line candidate as two points
-#     return [
-#         (line_location + resolution / 2, 0),
-#         (line_location + resolution / 2, SIX_FEET),
-#     ]
-
-
-# # Function to get vertical line based on mode of points
-# def get_horizontal_line(points, line, resolution=1):
-#     # Convert y values of points to integers
-#     y = [round(point[1] / resolution) * resolution for point in points]
-#     # Get the mode of the y values
-#     line_locations = sorted(set(y), key=y.count)
-#     line_location = line_locations[-1]
-#     # Set limit based on line position
-#     if line == "U":
-#         limit = SIX_FEET
-#     else:
-#         limit = 0
-#     # # If selected point is too far from nearest neighbour, remove it
-#     # while abs(line_location - limit) > NEAREST_NEIGHBOUR_LIMIT:
-#     #     line_locations.pop()
-#     #     if line_locations == []:
-#     #         return [(-50, -50), (-50, -50)]
-#     #     line_location = line_locations[-1]
-#     # Return final line candidate as two points
-#     return [
-#         (0, line_location + resolution / 2),
-#         (SIX_FEET, line_location + resolution / 2),
-#     ]
-
-
-# # Function to identify walls based on four groups of points
-# def wall_identification(data):
-#     walls = []
-#     # Split data into four groups
-#     data = [[(float(point[0]), float(point[1])) for point in group] for group in data]
-#     # Get vertical and horizontal lines for each group
-#     walls.append(get_vertical_line(data[0], "R", WALL_ESTIMATION_RESOLUTION))
-#     walls.append(get_horizontal_line(data[1], "U", WALL_ESTIMATION_RESOLUTION))
-#     walls.append(get_vertical_line(data[2], "L", WALL_ESTIMATION_RESOLUTION))
-#     # walls.append(get_horizontal_line(data[3], "D", WALL_ESTIMATION_RESOLUTION))
-
-#     return walls
-
-
-map_file = open("map.csv", "r").read()
+map_file = open("map7.csv", "r").read()
 points = [point.split(",") for point in map_file.split("\n") if point]
 # Change points into four groups by value of first char
 group_of_points = [
-    [[point[1], point[2]] for point in points if point[0] == direction]
+    [[float(point[1]), float(point[2])] for point in points if point[0] == direction]
     for direction in "RULDCF"
 ]
 
-# predicted_walls = wall_identification(group_of_points)
-
+# Filter points without a point within 1 euclidean distance
+group_of_points = [
+    [point for point in group if not is_point_outlier(point, group_of_points)]
+    for group in group_of_points
+]
 actual_walls = [
     [(0, 0), (0, SIX_FEET)],
     [(0, SIX_FEET), (SIX_FEET, SIX_FEET)],
@@ -110,17 +56,38 @@ for point in group_of_points[4]:
 for point in group_of_points[5]:
     plt.scatter(float(point[0]), float(point[1]), color="blue")
 
-# for wall in predicted_walls:
-#     plt.plot([point[0] for point in wall], [point[1] for point in wall], color="blue")
-
 for wall in actual_walls:
     plt.plot([point[0] for point in wall], [point[1] for point in wall], color="green")
 
-# Plot robot position
-plt.scatter(60.96, 122.88, color="black")
 plt.xlabel("X")
 plt.ylabel("Y")
 plt.title("Map of Environment")
 # Make plot square
 plt.gca().set_aspect("equal", adjustable="box")
+
+
+# Second figure
+# Plot seaborn heatmap of number of points on the map
+plt.figure()
+# Get the number of points in each grid 2cm grid square
+grid = [[0 for _ in range(13)] for _ in range(13)]
+for points in group_of_points:
+    if points != group_of_points[4]:
+        for point in points:
+            grid[int(float(point[1]) / 15)][int(float(point[0]) / 15)] += 1
+
+grid[11] = [20 for _ in range(13)]
+grid[0] = [20 for _ in range(13)]
+for row in grid:
+    row[11] = 20
+    row[0] = 20
+# Plot the heatmap
+ax = sns.heatmap(grid, cmap="magma", vmin=2, vmax=12)
+# Display only rows 0 to 11 and columns 0 to 11
+ax.invert_yaxis()
+plt.xlim(0, 12)
+plt.ylim(0, 12)
+plt.xlabel("X")
+plt.ylabel("Y")
+plt.title("Heatmap of Points in Environment")
 plt.show()

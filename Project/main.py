@@ -10,7 +10,6 @@ from ev3dev2.button import Button
 from detect import (
     get_avoidance_in_progress,
     set_avoidance_in_progress,
-    set_bumpers_pressed,
 )
 from avoid import (
     follow_wall,
@@ -40,12 +39,13 @@ from EKF import update_state, get_pred_covariance
 
 button = Button()
 
-WAYPOINT_FOLLOW_CONSTANT_PRIORITY = 6
-SCAN_SLOPE_PRIORITY = 1
-OBSTACLE_NOT_DETECTED_CONSTANT_PRIORITY = 2
+WAYPOINT_FOLLOW_CONSTANT_PRIORITY = 5
+SCAN_SLOPE_PRIORITY = 0.8
+OBSTACLE_NOT_DETECTED_CONSTANT_PRIORITY = 3
 OBSTACLE_DETECTED_CONSTANT_PRIORITY = 7
 OBJECT_DETECTED_CONSTANT_SCAN_PRIORITY = 8
 OBSTACLE_DETECTED_SCAN_FREQUENCY = 50
+SCAN_PRIORITY_MAX = 10
 
 
 def get_distance_since_last_scan():
@@ -139,6 +139,23 @@ def scan():
         ]
 
         set_pose_past([state[0], state[1], prev_state[2]])
+
+    self_distance_to_goal = (
+        (get_x_goal(get_goals_reached()) - get_pose_past()[0]) ** 2
+        + (get_y_goal(get_goals_reached()) - get_pose_past()[1]) ** 2
+    ) ** 0.5
+
+    for group in point_map:
+        for point in group:
+
+            distance_to_goal = (
+                (point[0] - get_x_goal(get_goals_reached())) ** 2
+                + (point[1] - get_y_goal(get_goals_reached())) ** 2
+            ) ** 0.5
+            if distance_to_goal < 10 and self_distance_to_goal < 20:
+                increment_goals_reached()
+                break
+
     pose_file = open("pose.csv", "a")
     pose_file.write(shift_string)
     pose_file.close()
@@ -160,11 +177,14 @@ def scan():
 def scan_priority():
     return (
         "scan",
-        (
-            OBJECT_DETECTED_CONSTANT_SCAN_PRIORITY
-            if get_avoidance_in_progress()
-            and get_distance_since_last_scan() > OBSTACLE_DETECTED_SCAN_FREQUENCY
-            else SCAN_SLOPE_PRIORITY * get_distance_since_last_scan()
+        min(
+            (
+                OBJECT_DETECTED_CONSTANT_SCAN_PRIORITY
+                if get_avoidance_in_progress()
+                and get_distance_since_last_scan() > OBSTACLE_DETECTED_SCAN_FREQUENCY
+                else SCAN_SLOPE_PRIORITY * get_distance_since_last_scan()
+            ),
+            SCAN_PRIORITY_MAX,
         ),
         scan,
     )
@@ -184,7 +204,6 @@ def obstacle_avoid():
         right_motor.stop()
         set_avoidance_in_progress(False)
         set_wall_following_direction(None)
-        set_bumpers_pressed(False)
 
 
 def obstacle_avoid_priority():

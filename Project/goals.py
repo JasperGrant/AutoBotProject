@@ -92,6 +92,10 @@ def check_give_up_on_goal(pose_past, goals_reached):
         if pose_past[0] >= get_x_goal(goals_reached):
             increment_goals_reached()
             return True
+    elif get_goal_directions(goals_reached) == "L":
+        if pose_past[0] <= get_x_goal(goals_reached):
+            increment_goals_reached()
+            return True
     else:
         print("Error: Invalid goal direction")
         exit(1)
