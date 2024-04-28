@@ -156,9 +156,6 @@ def scan():
                 increment_goals_reached()
                 break
 
-    pose_file = open("pose.csv", "a")
-    pose_file.write(shift_string)
-    pose_file.close()
     print(shift_string)
     # Save the point map to a file
     for i, direction in enumerate(["R", "U", "L", "D"]):

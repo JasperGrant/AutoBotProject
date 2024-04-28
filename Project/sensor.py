@@ -160,19 +160,6 @@ def wall_identification(data, pose_past):
     if D_wall is not None:
         walls[3] = D_wall[0]
 
-    pose_file = open("pose.csv", "a")
-    pose_file.write(
-        str(walls[0])
-        + ","
-        + str(walls[1])
-        + ","
-        + str(walls[2])
-        + ","
-        + str(walls[3])
-        + "\n"
-    )
-    pose_file.close()
-
     current_closest_corner = sorted(
         range(4),
         key=lambda i: (corners[i][0] - pose_past[0]) ** 2

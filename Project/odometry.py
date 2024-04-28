@@ -37,7 +37,11 @@ pose_mutex = threading.Lock()
 def set_pose_past(new_pose):
     with pose_mutex:
         global pose_past
-        # print(new_pose)
+        pose_file = open("pose.csv", "a")
+        pose_file.write(
+            str(new_pose[0]) + "," + str(new_pose[1]) + "," + str(new_pose[2]) + "\n"
+        )
+        pose_file.close()
         pose_past = new_pose
 
 

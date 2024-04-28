@@ -21,13 +21,18 @@ def is_point_outlier(point, group):
 # Six feet in cm
 SIX_FEET = 182.88
 
-map_file = open("map7.csv", "r").read()
+map_file = open("map9.csv", "r").read()
 points = [point.split(",") for point in map_file.split("\n") if point]
 # Change points into four groups by value of first char
 group_of_points = [
     [[float(point[1]), float(point[2])] for point in points if point[0] == direction]
     for direction in "RULDCF"
 ]
+
+robot_pose = [
+    points.split(",") for points in open("pose.csv", "r").read().split("\n") if points
+]
+robot_pose = [[float(point[0]), float(point[1])] for point in robot_pose]
 
 # Filter points without a point within 1 euclidean distance
 group_of_points = [
@@ -59,6 +64,9 @@ for point in group_of_points[5]:
 for wall in actual_walls:
     plt.plot([point[0] for point in wall], [point[1] for point in wall], color="green")
 
+for point in robot_pose:
+    plt.plot(float(point[0]), float(point[1]), color="black")
+
 plt.xlabel("X")
 plt.ylabel("Y")
 plt.title("Map of Environment")
@@ -70,14 +78,14 @@ plt.gca().set_aspect("equal", adjustable="box")
 # Plot seaborn heatmap of number of points on the map
 plt.figure()
 # Get the number of points in each grid 2cm grid square
-grid = [[0 for _ in range(13)] for _ in range(13)]
+grid = [[0 for _ in range(14)] for _ in range(14)]
 for points in group_of_points:
     if points != group_of_points[4]:
         for point in points:
             grid[int(float(point[1]) / 15)][int(float(point[0]) / 15)] += 1
 
-grid[11] = [20 for _ in range(13)]
-grid[0] = [20 for _ in range(13)]
+grid[11] = [20 for _ in range(14)]
+grid[0] = [20 for _ in range(14)]
 for row in grid:
     row[11] = 20
     row[0] = 20
