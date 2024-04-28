@@ -33,7 +33,7 @@ MOTOR_HIGH = 10
 MOTOR_LOW = 5
 
 k_p = 0.1
-k_d = 0.1
+k_d = 0.07
 
 WALL_DISTANCE = 15
 
@@ -218,12 +218,12 @@ def follow_wall(direction="L"):
 
     survey_angle_reading = get_avoidance_ultrasonic_distance() - BASE_WIDTH / 2
 
-    error = clamp(WALL_DISTANCE - survey_angle_reading, -25, 25)
+    error = clamp(WALL_DISTANCE - survey_angle_reading, -20, 20)
 
     global prev_error
     derivative_error = error - prev_error
 
-    motor_input_change = k_p * error + k_d * derivative_error
+    motor_input_change = clamp(k_p * error + k_d * derivative_error, -4, 4)
 
     # Set previous error
 
@@ -241,6 +241,8 @@ def follow_wall(direction="L"):
         MOTOR_BASE_SPEED - motor_input_change,
         MOTOR_BASE_SPEED + motor_input_change,
     )
+
+    print(motor_speeds)
     # Handle wall in front
     if wall_in_front:
         motor_speeds = (
