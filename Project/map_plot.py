@@ -98,4 +98,25 @@ plt.ylim(0, 12)
 plt.xlabel("X")
 plt.ylabel("Y")
 plt.title("Heatmap of Points in Environment")
+
+print(robot_pose)
+# plot pose
+plt.figure()
+
+plt.plot(
+    [point[0] for point in robot_pose],
+    [point[1] for point in robot_pose],
+    color="Red",
+    marker="o",
+    linestyle="none",
+    markersize=5,
+)
+plt.xlabel("X")
+plt.ylabel("Y")
+plt.title("Robot Pose")
+# Custom dimensions
+plt.xlim(0, SIX_FEET)
+plt.ylim(0, SIX_FEET)
+
+
 plt.show()
