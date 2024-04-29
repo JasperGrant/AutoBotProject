@@ -1,5 +1,4 @@
 # Gerard-Robot
----
 
 Design project for MECH6905
 
