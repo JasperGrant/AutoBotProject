@@ -1,11 +1,11 @@
 # Gerard-Robot
 ---
 
-<img src="img/Gerard.png" width="600">
-
 Design project for MECH6905
 
 Project involved mapping a known environment with an unknown number of obstacles distributed randomly.
+
+<img src="img/Gerard.png" width="600">
 
 Mapping of a known environment with an unknown number of obstacles distributed randomly represents a very different problem from simply an unknown environment. When the space is well defined, qualities such as the shape and size of each room can be used to localize an exploring robot even while encountering features that it has never observed before. The main challenge in this localization is data association, how can what is known be associated with sensor readings. This paper will present a novel robotic architecture that combines behavior arbitration, an Extended Kalman Filter (EKF), bug-style obstacle avoidance, and feature extraction to present an agent which will be able to autonomously map a number of unknown objects in a well-defined space.
 
